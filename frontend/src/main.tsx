@@ -227,46 +227,46 @@ const DEMO_SUGGESTIONS: Suggestion[] = [
 ];
 
 const CLASS_LABELS: Record<string, string> = {
-  car: "小汽车",
-  pedestrian: "行人",
-  rider: "骑行者",
-  bus: "公交车",
-  truck: "卡车",
-  motorcycle: "摩托车",
-  "traffic light": "交通灯",
-  "traffic sign": "交通标志",
+  car: "Car",
+  pedestrian: "Pedestrian",
+  rider: "Rider",
+  bus: "Bus",
+  truck: "Truck",
+  motorcycle: "Motorcycle",
+  "traffic light": "Traffic light",
+  "traffic sign": "Traffic sign",
 };
 
 const CONDITION_LABELS: Record<string, string> = {
-  human_only: "纯人工",
-  ai_assisted: "参考框",
-  ai_assisted_confidence: "参考框+置信度",
+  human_only: "Human only",
+  ai_assisted: "Reference boxes",
+  ai_assisted_confidence: "References + confidence",
 };
 
 const ARTIFACT_LABELS: Record<string, string> = {
-  features: "标注特征表",
-  scored_features: "风险打分表",
-  review_metrics: "复审策略指标",
-  report_markdown: "实验报告",
-  report_summary: "报告摘要",
-  yolo_predictions: "YOLO 预标注结果",
+  features: "Annotation features",
+  scored_features: "Risk scores",
+  review_metrics: "Review policy metrics",
+  report_markdown: "Experiment report",
+  report_summary: "Report summary",
+  yolo_predictions: "YOLO pre-labels",
 };
 
 const POLICY_LABELS: Record<string, string> = {
-  Random: "随机复审",
-  "Low-confidence": "低置信度优先",
-  "High-confidence": "高置信度优先",
-  "High-loss": "高损失优先",
-  "Ensemble disagreement": "模型分歧优先",
-  "Confident learning": "置信学习",
+  Random: "Random review",
+  "Low-confidence": "Low-confidence first",
+  "High-confidence": "High-confidence first",
+  "High-loss": "High-loss first",
+  "Ensemble disagreement": "Ensemble disagreement",
+  "Confident learning": "Confident learning",
   SCLNScore: "SCLNScore",
 };
 
 const COORD_LABELS: Record<"x" | "y" | "width" | "height", string> = {
-  x: "左上 X",
-  y: "左上 Y",
-  width: "宽度",
-  height: "高度",
+  x: "Top-left X",
+  y: "Top-left Y",
+  width: "Width",
+  height: "Height",
 };
 
 function classLabel(value: string) {
@@ -288,7 +288,7 @@ function policyLabel(value: unknown) {
 
 function isProblemMessage(value: string) {
   const normalized = value.toLowerCase();
-  return normalized.includes("error") || value.includes("失败") || value.includes("暂无");
+  return normalized.includes("error") || value.includes("failed") || value.includes("unavailable");
 }
 
 function createId(prefix: string) {
@@ -385,27 +385,27 @@ function readDraft(task: Task, fallbackLabels: Label[], classes: string[]): Task
 }
 
 function taskTypeLabel(bundle: TaskBundle) {
-  if (bundle.display_condition === "standard") return "从原图标注";
-  if (bundle.show_confidence) return "检查参考框和置信度";
-  return "检查参考框";
+  if (bundle.display_condition === "standard") return "Annotate from scratch";
+  if (bundle.show_confidence) return "Review references + confidence";
+  return "Review reference boxes";
 }
 
 function taskTypeHint(bundle: TaskBundle) {
-  if (bundle.display_condition === "standard") return "从空白原图开始，标出所有指定类别目标。";
-  if (bundle.show_confidence) return "检查已有参考框，可看到置信度，必要时修改、删除或新增。";
-  return "检查已有参考框，必要时修改、删除或新增。";
+  if (bundle.display_condition === "standard") return "Start from a blank image and label all specified classes.";
+  if (bundle.show_confidence) return "Review existing reference boxes with confidence scores; edit, delete, or add as needed.";
+  return "Review existing reference boxes; edit, delete, or add as needed.";
 }
 
 function demoModeLabel(mode: DemoMode) {
-  if (mode === "human") return "原图标注";
-  if (mode === "reference") return "检查参考框";
-  return "参考框+置信度";
+  if (mode === "human") return "Annotate from scratch";
+  if (mode === "reference") return "Review reference boxes";
+  return "References + confidence";
 }
 
 function demoModeHint(mode: DemoMode) {
-  if (mode === "human") return "只显示原图，参与者需要从零开始画出所有指定类别目标。";
-  if (mode === "reference") return "显示 AI 给出的框和类别，参与者检查后修改、删除或新增。";
-  return "显示 AI 给出的框、类别和置信度，参与者同样需要检查后确认。";
+  if (mode === "human") return "Raw image only—participants draw all specified classes from scratch.";
+  if (mode === "reference") return "Shows AI boxes and classes; participants review, edit, delete, or add.";
+  return "Shows AI boxes, classes, and confidence; participants review and confirm.";
 }
 
 function demoLabels(mode: DemoMode) {
@@ -458,7 +458,7 @@ function App() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [activeClass, setActiveClass] = useState("car");
   const [mode, setMode] = useState<AnnotationMode>("draw");
-  const [message, setMessage] = useState("准备就绪");
+  const [message, setMessage] = useState("Ready");
   const [busy, setBusy] = useState(false);
   const [elapsedMs, setElapsedMs] = useState(0);
   const [paused, setPaused] = useState(false);
@@ -580,7 +580,7 @@ function App() {
 
   async function claimTask(condition?: Condition) {
     setBusy(true);
-    setMessage("正在加载下一张图片...");
+    setMessage("Loading next image...");
     let response: Response;
     try {
       response = await fetch(`${API_BASE}/tasks/claim`, {
@@ -589,12 +589,12 @@ function App() {
         body: JSON.stringify({ annotator_id: annotatorId, condition }),
       });
     } catch {
-      setMessage("无法连接后端服务，请确认 8001 端口已开放。");
+      setMessage("Cannot reach backend. Confirm port 8001 is open.");
       setBusy(false);
       return;
     }
     if (!response.ok) {
-      setMessage("暂无可领取任务，请联系管理员。");
+      setMessage("No tasks available. Contact the administrator.");
       setBusy(false);
       return;
     }
@@ -621,7 +621,7 @@ function App() {
     setMode(draft?.mode ?? "draw");
     setPaused(draft?.paused ?? false);
     setElapsedMs(restoredElapsedMs);
-    setMessage(draft ? "已恢复上次未完成的图片。" : `${taskTypeLabel(data)}任务已加载。`);
+    setMessage(draft ? "Restored your last incomplete image." : `${taskTypeLabel(data)} task loaded.`);
     setBusy(false);
     refreshStats();
   }
@@ -653,12 +653,12 @@ function App() {
         }),
       });
     } catch {
-      setMessage("无法连接后端服务，请确认 8001 端口已开放。");
+      setMessage("Cannot reach backend. Confirm port 8001 is open.");
       setBusy(false);
       return;
     }
     if (!response.ok) {
-      setMessage("提交失败，请稍后重试或联系管理员。");
+      setMessage("Submit failed. Retry or contact the administrator.");
       setBusy(false);
       return;
     }
@@ -690,7 +690,7 @@ function App() {
       } else {
         setElapsedMs(nextElapsedMs);
       }
-      setMessage(next ? "已暂停计时，可继续上次任务。" : "已恢复计时。");
+      setMessage(next ? "Timer paused. You can resume this task." : "Timer resumed.");
       void saveDraft({
         paused: next,
         elapsedMs: nextElapsedMs,
@@ -742,15 +742,15 @@ function App() {
     <div className="app">
       <header className="topbar">
         <div>
-          <div className="brand">自动驾驶场景标注</div>
-          <div className="subtitle">请为图中可见目标绘制边界框，并选择最合适的类别。</div>
+          <div className="brand">Autonomous Driving Scene Annotation</div>
+          <div className="subtitle">Draw bounding boxes around visible targets and choose the best class.</div>
         </div>
         <div className="topActions">
           <button className={view === "annotator" ? "activeView" : ""} onClick={() => setView("annotator")}>
-            <UserRound size={16} /> 标注
+            <UserRound size={16} /> Annotate
           </button>
           <button className={view === "researcher" ? "activeView" : ""} onClick={() => setView("researcher")}>
-            <BarChart3 size={16} /> 研究者
+            <BarChart3 size={16} /> Researcher
           </button>
         </div>
       </header>
@@ -759,75 +759,75 @@ function App() {
         {view === "annotator" ? (
           <>
             <section className="panel">
-              <div className="panelTitle">标注进度</div>
+              <div className="panelTitle">Annotation progress</div>
               <div className="progressBlock">
                 <div className="progressTrack" aria-hidden="true">
                   <div className="progressFill" style={{ width: `${progressPercent}%` }} />
                 </div>
                 <div className="progressMeta">
-                  <span>{stats ? `${submittedTasks} / ${totalTasks}` : "正在读取..."}</span>
+                  <span>{stats ? `${submittedTasks} / ${totalTasks}` : "Loading..."}</span>
                   <strong>{stats ? `${progressPercent}%` : "--"}</strong>
                 </div>
               </div>
               <div className="summaryList">
-                <Metric icon={<Clock3 size={15} />} label="待领取" value={stats?.tasks_pending ?? 0} compact />
-                <Metric icon={<Activity size={15} />} label="进行中" value={stats?.tasks_in_progress ?? 0} compact />
-                <Metric icon={<CheckCircle2 size={15} />} label="已完成" value={submittedTasks} compact />
-                <Metric icon={<Activity size={15} />} label="总任务" value={totalTasks} compact />
+                <Metric icon={<Clock3 size={15} />} label="Pending" value={stats?.tasks_pending ?? 0} compact />
+                <Metric icon={<Activity size={15} />} label="In progress" value={stats?.tasks_in_progress ?? 0} compact />
+                <Metric icon={<CheckCircle2 size={15} />} label="Completed" value={submittedTasks} compact />
+                <Metric icon={<Activity size={15} />} label="Total tasks" value={totalTasks} compact />
               </div>
             </section>
             <section className="panel">
-              <div className="panelTitle">标注会话</div>
+              <div className="panelTitle">Annotation session</div>
               <label className="field">
-                <span>参与者编号</span>
+                <span>Participant ID</span>
                 <input value={annotatorId} onChange={(event) => setAnnotatorId(event.target.value)} />
               </label>
-              <div className="taskTypeLegend" aria-label="任务类型说明">
-                <span>任务由系统自动分配，不需要手动选择。</span>
+              <div className="taskTypeLegend" aria-label="Task type legend">
+                <span>Tasks are assigned automatically—no manual selection.</span>
                 <div className="taskTypeList">
-                  <span>原图标注</span>
-                  <span>检查参考框</span>
-                  <span>参考框+置信度</span>
+                  <span>Annotate from scratch</span>
+                  <span>Review reference boxes</span>
+                  <span>References + confidence</span>
                 </div>
               </div>
               <button className="primary" disabled={busy || Boolean(bundle)} onClick={() => claimTask()}>
-                <RefreshCcw size={16} /> 继续上次 / 开始下一张
+                <RefreshCcw size={16} /> Resume / Start next image
               </button>
             </section>
           </>
         ) : (
           <section className="panel">
-            <div className="panelTitle">实验进度</div>
+            <div className="panelTitle">Study progress</div>
             <div className="summaryList">
-              <Metric icon={<Activity size={15} />} label="图片数" value={stats?.images ?? 0} compact />
-              <Metric icon={<Clock3 size={15} />} label="待领取" value={stats?.tasks_pending ?? 0} compact />
-              <Metric icon={<Activity size={15} />} label="进行中" value={stats?.tasks_in_progress ?? 0} compact />
-              <Metric icon={<CheckCircle2 size={15} />} label="已完成" value={stats?.tasks_submitted ?? 0} compact />
-              <Metric icon={<Sparkles size={15} />} label="参考框" value={stats?.ai_suggestions ?? 0} compact />
+              <Metric icon={<Activity size={15} />} label="Images" value={stats?.images ?? 0} compact />
+              <Metric icon={<Clock3 size={15} />} label="Pending" value={stats?.tasks_pending ?? 0} compact />
+              <Metric icon={<Activity size={15} />} label="In progress" value={stats?.tasks_in_progress ?? 0} compact />
+              <Metric icon={<CheckCircle2 size={15} />} label="Submitted" value={stats?.tasks_submitted ?? 0} compact />
+              <Metric icon={<Sparkles size={15} />} label="Reference boxes" value={stats?.ai_suggestions ?? 0} compact />
             </div>
           </section>
         )}
 
         {view === "annotator" && bundle && (
           <section className="panel">
-            <div className="panelTitle">当前图片</div>
+            <div className="panelTitle">Current image</div>
             <div className="taskMeta">
               <div className="taskTypeCard">
-                <span>任务类型</span>
+                <span>Task type</span>
                 <strong>{taskTypeLabel(bundle)}</strong>
                 <p>{taskTypeHint(bundle)}</p>
               </div>
               <div>
-                <span>图片编号</span>
+                <span>Image ID</span>
                 <strong>{bundle.image.external_id}</strong>
               </div>
               <div className="metaGrid">
-                <Metric icon={<Crosshair size={15} />} label="目标框" value={labels.length} compact />
-                <Metric icon={<CircleDot size={15} />} label="操作数" value={events.length} compact />
-                <Metric icon={<Clock3 size={15} />} label={paused ? "已暂停" : "用时"} value={`${Math.round(elapsedMs / 1000)}秒`} compact />
+                <Metric icon={<Crosshair size={15} />} label="Boxes" value={labels.length} compact />
+                <Metric icon={<CircleDot size={15} />} label="Actions" value={events.length} compact />
+                <Metric icon={<Clock3 size={15} />} label={paused ? "Paused" : "Elapsed"} value={`${Math.round(elapsedMs / 1000)}s`} compact />
               </div>
               <button type="button" className={paused ? "secondary pauseActive" : "secondary"} onClick={togglePause}>
-                {paused ? "继续计时" : "暂停计时"}
+                {paused ? "Resume timer" : "Pause timer"}
               </button>
             </div>
           </section>
@@ -835,21 +835,21 @@ function App() {
 
         {view === "annotator" && bundle && (
           <section className="panel">
-            <div className="panelTitle">标注工具</div>
+            <div className="panelTitle">Annotation tools</div>
             <div className="segmented">
-              <button type="button" className={mode === "draw" ? "active" : ""} onClick={() => setMode("draw")} title="绘制目标框">
-                <Square size={16} /> 画框
+              <button type="button" className={mode === "draw" ? "active" : ""} onClick={() => setMode("draw")} title="Draw bounding box">
+                <Square size={16} /> Draw box
               </button>
-              <button type="button" className={mode === "select" ? "active" : ""} onClick={() => setMode("select")} title="选择目标框">
-                <MousePointer2 size={16} /> 选择
+              <button type="button" className={mode === "select" ? "active" : ""} onClick={() => setMode("select")} title="Select bounding box">
+                <MousePointer2 size={16} /> Select
               </button>
             </div>
             <div className="field">
-              <span>新目标类别</span>
+              <span>New object class</span>
               <ClassPalette classes={bundle.classes} value={activeClass} onChange={setActiveClass} />
             </div>
             <button className="primary" disabled={busy || paused} onClick={submitTask}>
-              <Save size={16} /> 提交并继续下一张
+              <Save size={16} /> Submit and continue
             </button>
           </section>
         )}
@@ -880,8 +880,8 @@ function App() {
           <div className="emptyState">
             <Plus size={28} />
             <div>
-              <strong>准备好后开始下一张</strong>
-              <span>请标出右侧类别列表中的所有可见目标。</span>
+              <strong>Ready for the next image</strong>
+              <span>Label all visible targets from the class list on the right.</span>
             </div>
           </div>
         ) : (
@@ -894,7 +894,7 @@ function App() {
           <>
             <section className="panel">
               <div className="panelHeader">
-                <div className="panelTitle">目标列表</div>
+                <div className="panelTitle">Object list</div>
                 <button
                   disabled={labels.length === 0}
                   onClick={() => {
@@ -905,14 +905,14 @@ function App() {
                         details: { bulk: true },
                       }),
                     );
-                    setMessage("已标记当前目标为已检查。");
+                    setMessage("Marked all current objects as reviewed.");
                   }}
                 >
-                  <CheckCircle2 size={15} /> 已检查
+                  <CheckCircle2 size={15} /> Mark reviewed
                 </button>
               </div>
               <div className="labelList">
-                {labels.length === 0 && <div className="muted">当前还没有目标框。</div>}
+                {labels.length === 0 && <div className="muted">No bounding boxes yet.</div>}
                 {labels.map((label, index) => (
                   <button
                     key={label.temp_id}
@@ -929,7 +929,7 @@ function App() {
               </div>
             </section>
             <section className="panel">
-              <div className="panelTitle">目标框检查</div>
+              <div className="panelTitle">Box inspector</div>
               {selected ? (
                 <Inspector
                   classes={bundle.classes}
@@ -939,7 +939,7 @@ function App() {
                   onDelete={deleteSelected}
                 />
               ) : (
-                <div className="muted">选择一个目标框后，可修改类别或坐标。</div>
+                <div className="muted">Select a box to edit its class or coordinates.</div>
               )}
             </section>
           </>
@@ -957,28 +957,28 @@ function ReportPanel({ report }: { report: Report | null }) {
   const summary = report?.summary;
   return (
     <section className="panel">
-      <div className="panelTitle">最新报告</div>
+      <div className="panelTitle">Latest report</div>
       {summary ? (
         <>
           <div className="summaryList">
-            <Metric icon={<Activity size={15} />} label="样本行" value={summary.total_rows} compact />
-            <Metric icon={<AlertCircle size={15} />} label="错误数" value={summary.total_errors} compact />
+            <Metric icon={<Activity size={15} />} label="Rows" value={summary.total_rows} compact />
+            <Metric icon={<AlertCircle size={15} />} label="Errors" value={summary.total_errors} compact />
             <Metric
               icon={<Gauge size={15} />}
-              label="错误率"
+              label="Error rate"
               value={`${(summary.overall_error_rate * 100).toFixed(1)}%`}
               compact
             />
           </div>
           {summary.best_low_budget_policy && (
             <div className="reportCallout">
-              <span>小预算最佳策略</span>
+              <span>Best low-budget policy</span>
               <strong>{policyLabel(summary.best_low_budget_policy.policy)}</strong>
             </div>
           )}
         </>
       ) : (
-        <div className="muted">尚未生成报告。</div>
+        <div className="muted">No report generated yet.</div>
       )}
       <div className="artifactList">
         {(report?.artifacts || []).map((artifact) => (
@@ -992,7 +992,7 @@ function ReportPanel({ report }: { report: Report | null }) {
           >
             <Download size={14} />
             <span>{artifactLabel(artifact.name)}</span>
-            <strong>{artifact.exists && artifact.size_bytes ? `${Math.ceil(artifact.size_bytes / 1024)} KB` : "缺失"}</strong>
+            <strong>{artifact.exists && artifact.size_bytes ? `${Math.ceil(artifact.size_bytes / 1024)} KB` : "Missing"}</strong>
           </a>
         ))}
       </div>
@@ -1013,8 +1013,8 @@ function ClassGuide() {
   ];
   return (
     <section className="panel">
-      <div className="panelTitle">目标类别</div>
-      <div className="muted">流程：开始下一张，画框或检查参考框，调整类别和位置，最后提交本图。</div>
+      <div className="panelTitle">Target classes</div>
+      <div className="muted">Workflow: start next image, draw or review boxes, adjust class and position, then submit.</div>
       <div className="classGuide">
         {classes.map((item) => (
           <span key={item}>{classLabel(item)}</span>
@@ -1042,13 +1042,13 @@ function DemoShell({
         </div>
         <div className="topActions">
           <a className="navButton" href="/">
-            <ArrowLeft size={16} /> 返回正式标注
+            <ArrowLeft size={16} /> Back to annotation
           </a>
           <a className="navButton" href="/demo/examples">
-            三类对照
+            Three conditions
           </a>
           <a className="navButton" href="/demo/practice">
-            练习界面
+            Practice UI
           </a>
         </div>
       </header>
@@ -1060,7 +1060,7 @@ function DemoShell({
 function DemoExamples() {
   const modes: DemoMode[] = ["human", "reference", "confidence"];
   return (
-    <DemoShell title="临时任务类型示例" subtitle="只用于培训和展示，不领取正式任务，也不会写入数据库。">
+    <DemoShell title="Task type examples" subtitle="Training and demo only—no real tasks, submissions, or database writes.">
       <main className="demoExamples">
         {modes.map((mode) => (
           <section className="demoCard" key={mode}>
@@ -1069,7 +1069,7 @@ function DemoExamples() {
                 <h2>{demoModeLabel(mode)}</h2>
                 <p>{demoModeHint(mode)}</p>
               </div>
-              <strong>{mode === "human" ? "无参考框" : `${DEMO_SUGGESTIONS.length} 个参考框`}</strong>
+              <strong>{mode === "human" ? "No reference boxes" : `${DEMO_SUGGESTIONS.length} reference boxes`}</strong>
             </div>
             <DemoPreview mode={mode} />
           </section>
@@ -1091,7 +1091,7 @@ function DemoPreview({ mode }: { mode: DemoMode }) {
         showConfidence={mode === "confidence"}
       />
       <div className="demoInfo">
-        <span>图片编号</span>
+        <span>Image ID</span>
         <strong>{DEMO_IMAGE.external_id}</strong>
       </div>
     </div>
@@ -1103,11 +1103,11 @@ function DemoPractice() {
   const bundle = demoBundle(mode);
   const labels = demoLabels(mode);
   return (
-    <DemoShell title="临时练习界面" subtitle="切换三种任务形态，给标注员演示正式界面会看到什么。">
+    <DemoShell title="Practice interface" subtitle="Switch among three task modes to show annotators what the live UI looks like.">
       <div className="demoPractice">
         <aside className="demoSide">
           <section className="panel">
-            <div className="panelTitle">选择演示类型</div>
+            <div className="panelTitle">Demo mode</div>
             <div className="demoModeSwitch">
               {(["human", "reference", "confidence"] as DemoMode[]).map((item) => (
                 <button
@@ -1122,22 +1122,22 @@ function DemoPractice() {
             </div>
           </section>
           <section className="panel">
-            <div className="panelTitle">当前图片</div>
+            <div className="panelTitle">Current image</div>
             <div className="taskMeta">
               <div className="taskTypeCard">
-                <span>任务类型</span>
+                <span>Task type</span>
                 <strong>{taskTypeLabel(bundle)}</strong>
                 <p>{taskTypeHint(bundle)}</p>
               </div>
               <div className="metaGrid">
-                <Metric icon={<Crosshair size={15} />} label="目标框" value={labels.length} compact />
-                <Metric icon={<CircleDot size={15} />} label="操作数" value="演示" compact />
-                <Metric icon={<Clock3 size={15} />} label="用时" value="不计时" compact />
+                <Metric icon={<Crosshair size={15} />} label="Boxes" value={labels.length} compact />
+                <Metric icon={<CircleDot size={15} />} label="Actions" value="Demo" compact />
+                <Metric icon={<Clock3 size={15} />} label="Elapsed" value="N/A" compact />
               </div>
             </div>
           </section>
           <section className="panel">
-            <div className="panelTitle">目标类别</div>
+            <div className="panelTitle">Target classes</div>
             <ClassPalette classes={DEMO_CLASSES} value="car" onChange={() => undefined} />
           </section>
         </aside>
@@ -1152,9 +1152,9 @@ function DemoPractice() {
         </main>
         <aside className="demoSide">
           <section className="panel">
-            <div className="panelTitle">目标列表</div>
+            <div className="panelTitle">Object list</div>
             <div className="labelList">
-              {labels.length === 0 && <div className="muted">原图标注模式下，开始时没有预置目标框。</div>}
+              {labels.length === 0 && <div className="muted">In from-scratch mode, no boxes are preloaded.</div>}
               {labels.map((label, index) => (
                 <div className="demoLabelRow" key={label.temp_id}>
                   <span className="labelIndex">{index + 1}</span>
@@ -1165,7 +1165,7 @@ function DemoPractice() {
             </div>
           </section>
           <section className="panel">
-            <div className="panelTitle">演示说明</div>
+            <div className="panelTitle">Demo notes</div>
             <div className="muted">{demoModeHint(mode)}</div>
           </section>
         </aside>
@@ -1219,25 +1219,25 @@ function ResearchWorkspace({ report, stats }: { report: Report | null; stats: St
     <div className="researchWorkspace">
       <section className="researchHero">
         <div>
-          <h1>实验监控</h1>
-          <p>用于查看任务进度、导出产物和汇总结果。请勿向参与者展示本页面。</p>
+          <h1>Study monitor</h1>
+          <p>Track task progress, export artifacts, and view summaries. Do not show this page to participants.</p>
         </div>
         <div className="researchMetrics">
-          <Metric icon={<Activity size={16} />} label="图片数" value={stats?.images ?? 0} />
-          <Metric icon={<CheckCircle2 size={16} />} label="已提交" value={stats?.tasks_submitted ?? 0} />
-          <Metric icon={<Crosshair size={16} />} label="最终标签" value={stats?.final_labels ?? 0} />
-          <Metric icon={<Sparkles size={16} />} label="参考框" value={stats?.ai_suggestions ?? 0} />
+          <Metric icon={<Activity size={16} />} label="Images" value={stats?.images ?? 0} />
+          <Metric icon={<CheckCircle2 size={16} />} label="Submitted" value={stats?.tasks_submitted ?? 0} />
+          <Metric icon={<Crosshair size={16} />} label="Final labels" value={stats?.final_labels ?? 0} />
+          <Metric icon={<Sparkles size={16} />} label="Reference boxes" value={stats?.ai_suggestions ?? 0} />
         </div>
       </section>
       {summary && (
         <section className="researchTable">
-          <div className="panelTitle">条件汇总</div>
+          <div className="panelTitle">Condition summary</div>
           <table>
             <thead>
               <tr>
-                <th>条件</th>
-                <th>标签数</th>
-                <th>错误数</th>
+                <th>Condition</th>
+                <th>Labels</th>
+                <th>Errors</th>
                 <th>FDER</th>
               </tr>
             </thead>
@@ -1288,7 +1288,7 @@ function ClassPalette({
   onChange: (value: string) => void;
 }) {
   return (
-    <div className="classPalette" role="group" aria-label="目标类别选择">
+    <div className="classPalette" role="group" aria-label="Target class selection">
       {classes.map((item) => (
         <button
           key={item}
@@ -1320,7 +1320,7 @@ function Inspector({
   return (
     <div className="inspector">
       <div className="field">
-        <span>当前类别</span>
+        <span>Current class</span>
         <ClassPalette
           classes={classes}
           value={label.category}
@@ -1329,7 +1329,7 @@ function Inspector({
       </div>
       {showConfidence && label.confidence != null && (
         <div className="confidence">
-          <span>置信度</span>
+          <span>Confidence</span>
           <strong>{label.confidence.toFixed(3)}</strong>
         </div>
       )}
@@ -1346,7 +1346,7 @@ function Inspector({
         ))}
       </div>
       <button className="danger" onClick={onDelete}>
-        <Trash2 size={16} /> 删除目标框
+        <Trash2 size={16} /> Delete box
       </button>
     </div>
   );

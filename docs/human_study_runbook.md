@@ -1,8 +1,8 @@
-# 人工实验运行手册
+# Human study runbook
 
-## 研究者准备
+## Researcher setup
 
-1. 确认 BDD100K pilot 数据、任务和 YOLO11 参考框已经准备好。
+1. Confirm BDD100K pilot data, tasks, and YOLO11 reference boxes are ready.
 
 ```bash
 python -m experiments.prepare_bdd100k --source-dir data/bdd100k_official --output-dir data/bdd100k_prepared --extract
@@ -12,13 +12,13 @@ python -m experiments.yolo11_pipeline --config configs/default.yaml --dataset bd
 python -m experiments.import_suggestions --config configs/default.yaml --input outputs/bdd100k/yolo11_predictions.jsonl
 ```
 
-2. 如果需要清空已有人工提交并重新开放所有任务：
+2. To clear existing human submissions and reopen all tasks:
 
 ```bash
 python -m experiments.reset_annotations --config configs/default.yaml
 ```
 
-3. 启动服务。
+3. Start services.
 
 ```bash
 uvicorn backend.app.main:app --host 0.0.0.0 --port 8001
@@ -29,23 +29,23 @@ cd frontend
 npm run dev -- --host 0.0.0.0 --port 5174
 ```
 
-## 标注员说明
+## Annotator instructions
 
-访问 `http://<server-ip>:5174`，停留在“标注”页，输入分配的参与者编号，然后点击“开始下一张”。
+Open `http://<server-ip>:5174`, stay on the **Annotate** tab, enter the assigned participant ID, then click **Resume / Start next image**.
 
-每张图需要完成：
+For each image:
 
-- 标出目标类别列表中的所有可见目标。
-- 如果界面出现参考框，逐一检查、修正或删除。
-- 如果界面没有参考框，直接从原图绘制目标框。
-- 只使用界面右侧显示的 8 个目标类别。
-- 确认本图完整后点击“提交本图”。
+- Label all visible targets from the class list.
+- If reference boxes appear, review each one—edit, delete, or keep as needed.
+- If no reference boxes appear, draw boxes from the raw image.
+- Use only the 8 classes shown in the UI.
+- When the image is complete, click **Submit and continue**.
 
-不要向参与者说明 AI-induced label noise、SCLNScore 或三种实验条件的真实研究目的。
+Do **not** explain AI-induced label noise, SCLNScore, or the true purpose of the three experimental conditions to participants.
 
-## 研究者监控
+## Researcher monitoring
 
-使用界面中的“研究者”页查看聚合进度和输出产物。人工收集完成后运行：
+Use the **Researcher** tab for aggregate progress and downloadable artifacts. After collection, run:
 
 ```bash
 python -m experiments.export_features --config configs/default.yaml --output outputs/features.csv --refresh-db

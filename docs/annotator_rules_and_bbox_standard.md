@@ -1,339 +1,336 @@
-# 自动驾驶 2D 目标检测标注规则与画框标准
+# Autonomous Driving 2D Object Detection Annotation Rules and Bounding-Box Standards
 
-版本：v1.0  
-适用项目：BDD100K / nuImages 自动驾驶场景 2D 目标检测标注实验  
-适用对象：人工标注员、培训人员、质检人员
+Version: v1.0  
+Applies to: BDD100K / nuImages autonomous-driving 2D object-detection annotation studies  
+Audience: annotators, trainers, quality reviewers
 
-## 1. 标注员要求
+## 1. Annotator requirements
 
-标注员需满足以下要求：
+Annotators must:
 
-1. 能稳定使用桌面浏览器完成图片标注任务。
-2. 能区分常见道路目标，包括车辆、行人、骑行者、交通灯和交通标志。
-3. 能按统一标准画矩形边界框，不随意扩大、缩小或遗漏目标。
-4. 每人使用唯一且固定的参与者编号，不与他人共用编号。
-5. 标注期间不得与其他标注员讨论具体图片内容或任务策略。
-6. 不使用外部检测工具、自动标注工具或脚本辅助完成任务。
-7. 如图片无法加载、目标类别不确定或界面异常，应记录问题并联系研究者，不要随意提交。
+1. Use a desktop browser reliably to complete image annotation tasks.
+2. Distinguish common road objects: vehicles, pedestrians, riders, traffic lights, and traffic signs.
+3. Draw axis-aligned bounding boxes to a consistent standard—no arbitrary expansion, shrinkage, or missed targets.
+4. Use a unique, fixed participant ID; do not share IDs.
+5. Not discuss specific images or task strategy with other annotators during the study.
+6. Not use external detectors, auto-labeling tools, or scripts.
+7. Log issues and contact the researcher if an image fails to load, a class is unclear, or the UI breaks—do not submit blindly.
 
-建议培训流程：
+Recommended training flow:
 
-1. 先阅读本规则文件。
-2. 观看三类临时示例界面。
-3. 完成 5 到 10 张练习图片。
-4. 由质检人员检查漏标、错类、框偏差和重复框。
-5. 通过后再进入正式标注。
+1. Read this document.
+2. View the three temporary demo interfaces.
+3. Complete 5–10 practice images.
+4. Have a reviewer check for missed labels, class errors, box offset, and duplicates.
+5. Enter formal annotation only after passing practice.
 
-## 2. 实验保密与行为规则
+## 2. Study confidentiality and conduct
 
-标注员只需知道本任务用于自动驾驶图像目标检测标注质量研究。不要向标注员解释更细的研究假设、模型风险分数或不同任务条件的真实对比目的。
+Annotators need only know the task is a study of annotation quality for autonomous-driving images. Do not explain finer hypotheses, model risk scores, or the true comparison across conditions.
 
-标注员须遵守：
+Annotators must:
 
-1. 按图片内容独立判断，不猜测系统为什么显示或不显示参考框。
-2. 如果界面显示参考框，需要逐个检查；参考框不一定正确。
-3. 如果界面不显示参考框，需要从原图中完整标出所有指定类别目标。
-4. 不能为了追求速度跳过小目标或远处目标。
-5. 不能因为一个框看起来“差不多”就忽略明显的类别或位置错误。
-6. 每张图完成后再提交；提交后默认进入下一张。
+1. Judge each image independently; do not guess why reference boxes are shown or hidden.
+2. If reference boxes appear, review each one—they may be wrong.
+3. If no reference boxes appear, label all specified classes from the raw image.
+4. Not skip small or distant targets for speed.
+5. Not ignore obvious class or location errors because a box looks “close enough.”
+6. Submit only after finishing each image; submission advances to the next image.
 
-## 3. 标注任务流程
+## 3. Annotation workflow
 
-1. 打开标注系统。
-2. 输入分配的参与者编号。
-3. 点击“继续上次 / 开始下一张”。
-4. 根据当前界面完成标注：
-   - 原图标注：从空白原图开始画框。
-   - 检查参考框：检查已有参考框，修改、删除或新增。
-   - 参考框+置信度：检查已有参考框和置信度，修改、删除或新增。
-5. 检查目标列表，确认没有漏标、错类、重复框。
-6. 点击“提交并继续下一张”。
-7. 如需暂时离开，点击“暂停计时”。回来后点击“继续计时”。
+1. Open the annotation system.
+2. Enter the assigned participant ID.
+3. Click **Resume / Start next image**.
+4. Complete annotation per the current interface:
+   - **From scratch**: draw boxes on a blank image.
+   - **Review references**: check existing reference boxes; edit, delete, or add.
+   - **References + confidence**: same as above, with confidence scores visible.
+5. Check the object list for missed labels, wrong classes, or duplicate boxes.
+6. Click **Submit and continue**.
+7. To leave temporarily, click **Pause timer**; on return, click **Resume timer**.
 
-系统会自动保存未提交进度。只要继续使用同一个参与者编号，就可以恢复上次未完成的图片。
+The system auto-saves unsubmitted progress. Using the same participant ID restores the last incomplete image.
 
-## 4. 需要标注的类别
+## 4. Classes to annotate
 
-只标注以下 8 类目标，不在列表中的目标不标。
+Label only these 8 classes. Do not label anything outside the list.
 
-| 类别 | 中文名称 | 标注说明 |
-| --- | --- | --- |
-| car | 小汽车 | 轿车、SUV、面包车、小型乘用车 |
-| pedestrian | 行人 | 站立或步行的人，不骑车 |
-| rider | 骑行者 | 骑自行车、摩托车、电动车的人，人与车整体按 rider 判断时需按界面类别要求处理 |
-| bus | 公交车 | 公交车、大巴、客运巴士 |
-| truck | 卡车 | 货车、厢式货车、工程车、大型运输车 |
-| motorcycle | 摩托车 | 摩托车、电动摩托车；若人车分离明显，按可见目标分别判断 |
-| traffic light | 交通灯 | 红绿灯、箭头灯、信号灯灯组 |
-| traffic sign | 交通标志 | 限速、禁令、指示、警告等道路标志牌 |
+| Class | Display name | Notes |
+|---|---|---|
+| car | Car | Sedans, SUVs, vans, small passenger vehicles |
+| pedestrian | Pedestrian | People standing or walking, not riding |
+| rider | Rider | People on bicycles, motorcycles, or e-bikes; follow UI guidance when person and vehicle overlap |
+| bus | Bus | Buses and coaches |
+| truck | Truck | Cargo vans, box trucks, construction vehicles, large transporters |
+| motorcycle | Motorcycle | Motorcycles and e-motorcycles; label person and bike separately when clearly separable |
+| traffic light | Traffic light | Signal heads, arrow lights, lamp assemblies |
+| traffic sign | Traffic sign | Speed, regulatory, warning, and guide road signs |
 
-不标注：
+Do **not** label:
 
-1. 车道线、路缘、建筑、树木、路灯杆、护栏。
-2. 模糊到无法判断类别的远处小点。
-3. 图片外只露出极少像素、无法确认类别的目标。
-4. 反光、影子、广告图案、车身上的图像。
-5. 不在 8 类列表中的目标，例如自行车本体、动物、普通路灯、施工锥桶。
+1. Lane markings, curbs, buildings, trees, lamp posts, guardrails.
+2. Distant blobs too blurry to classify.
+3. Targets with only a few pixels at the image edge when class is uncertain.
+4. Reflections, shadows, ads, or graphics on vehicle bodies.
+5. Objects outside the 8 classes (e.g., bicycles alone, animals, generic street lights, cones).
 
-## 5. 画框总原则
+## 5. General bounding-box principles
 
-边界框必须紧贴目标可见外轮廓，使用水平矩形框。
+Boxes must tightly fit the **visible** outer contour using axis-aligned rectangles.
 
-基本要求：
+Requirements:
 
-1. 框住目标的可见部分，不框不可见的被遮挡部分。
-2. 框尽量贴近目标边缘，不能留大面积背景。
-3. 不能切掉目标主体。
-4. 一个真实目标只画一个框。
-5. 多个相邻目标不能合成一个大框。
-6. 框的位置和类别都要正确，不能只改其中一项。
-7. 如果参考框明显偏大、偏小、偏移或框到旁边目标，需要调整。
+1. Box only visible portions; do not infer occluded regions.
+2. Stay close to edges; avoid large background margins.
+3. Do not crop off the main body of the target.
+4. One real object → one box.
+5. Do not merge adjacent objects into one box.
+6. Both position and class must be correct.
+7. Adjust reference boxes that are clearly too large, too small, misaligned, or on the wrong object.
 
-合格框标准：
+Acceptable box:
 
-1. 目标主体完整包含在框内。
-2. 框内背景尽量少。
-3. 框的左、右、上、下边界贴近目标可见轮廓。
-4. 同一目标没有重复框。
-5. 框对应类别正确。
+1. Main body fully inside the box.
+2. Minimal background inside the box.
+3. Top/bottom/left/right edges follow visible contour.
+4. No duplicate boxes on the same object.
+5. Correct class.
 
-## 6. 遮挡、截断与困难目标
+## 6. Occlusion, truncation, and hard cases
 
-遮挡目标：
+**Occluded targets**
 
-1. 只框可见部分。
-2. 不要凭想象补全被遮挡区域。
-3. 如果可见部分足以判断类别，应标注。
-4. 如果只能看到极少部分且无法判断类别，不标注。
+1. Box visible parts only.
+2. Do not hallucinate occluded extent.
+3. Label if enough is visible to judge class.
+4. Skip if too little is visible to classify.
 
-图片边缘截断目标：
+**Edge-truncated targets**
 
-1. 如果目标被图片边缘截断，但类别明确，应标注可见部分。
-2. 框边界可以贴到图片边缘。
-3. 不要把图片外不可见部分包含进框。
+1. Label visible portion if class is clear.
+2. Box may touch the image border.
+3. Do not include area outside the image.
 
-小目标和远处目标：
+**Small / distant targets**
 
-1. 类别能判断时应标注。
-2. 小目标框也要贴边，不要用过大的框。
-3. 如果目标小到无法稳定判断类别，可不标注。
+1. Label when class is identifiable.
+2. Keep boxes tight even when small.
+3. Skip when too small to classify reliably.
 
-模糊、夜晚、雨天目标：
+**Blur, night, rain**
 
-1. 以可见图像为准。
-2. 类别能判断则标注。
-3. 类别无法判断时不标注或联系质检人员。
+1. Judge from visible pixels only.
+2. Label when class is clear.
+3. Skip or ask QA when class is unclear.
 
-## 7. 类别具体画框标准
+## 7. Per-class box standards
 
-### 7.1 小汽车 car
+### 7.1 Car
 
-应包含车身可见部分，包括车头、车尾、车顶、车轮的可见外轮廓。
+Include visible body: front, rear, roof, and wheels where visible.
 
-注意：
+Notes:
 
-1. 不要把车影、反光、拖车外额外背景框进去。
-2. 多辆车相邻时必须分开画框。
-3. 被遮挡车辆只框可见部分。
-4. 车顶行李架若明显属于车体外轮廓，可包含。
+1. Exclude shadows, glare, and extra background beyond trailers.
+2. Separate boxes for adjacent vehicles.
+3. Occluded vehicles: visible parts only.
+4. Roof racks may be included if part of the visible silhouette.
 
-### 7.2 行人 pedestrian
+### 7.2 Pedestrian
 
-应框住人体可见部分，包括头、身体、四肢的可见外轮廓。
+Box visible head, torso, and limbs.
 
-注意：
+Notes:
 
-1. 行人手持物品通常不纳入行人框，除非紧贴身体且无法分离。
-2. 多个行人靠得很近时，也要分别画框。
-3. 骑车的人不要标为 pedestrian，应判断为 rider。
+1. Handheld objects usually excluded unless inseparable from the body.
+2. Separate boxes for nearby pedestrians.
+3. Do not label riders as pedestrian—use **rider**.
 
-### 7.3 骑行者 rider
+### 7.3 Rider
 
-用于骑自行车、摩托车、电动车等交通工具的人。
+People on bicycles, motorcycles, or e-bikes.
 
-建议标准：
+Notes:
 
-1. 如果界面只允许 rider 表示骑行者，框住骑行者人体可见部分。
-2. 如果人和摩托车都清楚可见，摩托车本体可另标 motorcycle。
-3. 不要把旁边的车、路面大面积框进去。
+1. If only **rider** is available, box the visible person.
+2. If person and motorcycle are both clear, motorcycle may be labeled **motorcycle** separately.
+3. Do not include large road or vehicle background.
 
-### 7.4 公交车 bus
+### 7.4 Bus
 
-应框住公交车或大巴车的完整可见车身。
+Box the full visible bus/coach body.
 
-注意：
+Notes:
 
-1. 公交车与卡车混淆时，看车窗排布、车门和用途特征。
-2. 只露出部分车身但类别明确时，框可见部分。
+1. Distinguish from truck via windows, doors, and vehicle role.
+2. Partial visibility is OK when class is clear.
 
-### 7.5 卡车 truck
+### 7.5 Truck
 
-应框住货车、厢式货车、工程车等可见车身。
+Box visible bodies of cargo vans, box trucks, and work trucks.
 
-注意：
+Notes:
 
-1. 小货车、厢式货车一般标为 truck，不标 car。
-2. 拖挂车如果车头和挂车连接明显，可按整体可见外轮廓框一个 truck；如果分离明显，按质检要求处理。
+1. Small vans and box trucks → **truck**, not **car**.
+2. Articulated rigs: one **truck** if clearly connected; split if separated per QA guidance.
 
-### 7.6 摩托车 motorcycle
+### 7.6 Motorcycle
 
-应框住摩托车本体可见部分。
+Box the motorcycle body.
 
-注意：
+Notes:
 
-1. 如果骑手明显可见，骑手按 rider 处理，摩托车本体按 motorcycle 处理。
-2. 不要把骑手和摩托车强行合成 motorcycle。
-3. 如果摩托车被遮挡但类别明确，框可见部分。
+1. Visible rider → **rider**; bike → **motorcycle**.
+2. Do not merge rider and bike into one motorcycle box.
+3. Partial occlusion OK when class is clear.
 
-### 7.7 交通灯 traffic light
+### 7.7 Traffic light
 
-应框住信号灯灯组的可见外轮廓。
+Box visible signal head / lamp assembly.
 
-注意：
+Notes:
 
-1. 通常只框灯头/灯组，不框整根杆。
-2. 多个独立灯组分开画框。
-3. 红绿灯很小时，能确认则标注。
-4. 箭头信号灯也属于 traffic light。
+1. Usually exclude the pole.
+2. Separate boxes for independent heads.
+3. Label small lights when identifiable.
+4. Arrow signals are **traffic light**.
 
-### 7.8 交通标志 traffic sign
+### 7.8 Traffic sign
 
-应框住道路标志牌的可见牌面。
+Box the visible sign face.
 
-注意：
+Notes:
 
-1. 通常只框标志牌面，不框杆子。
-2. 多个牌面相邻但边界清楚时分开画框。
-3. 限速牌、禁令牌、警告牌、指示牌都属于 traffic sign。
-4. 广告牌、商店招牌、车牌不属于 traffic sign。
+1. Usually exclude the pole.
+2. Separate adjacent signs with clear boundaries.
+3. Speed, regulatory, warning, and guide signs count.
+4. Billboards, shop signs, and license plates do not.
 
-## 8. 参考框检查标准
+## 8. Reference-box review
 
-当界面出现参考框时，标注员需要逐个检查。
+When reference boxes appear, review each one.
 
-保留参考框的条件：
+**Keep** when:
 
-1. 类别正确。
-2. 框住了正确目标。
-3. 框位置基本贴合目标可见边界。
-4. 不是重复框。
+1. Class is correct.
+2. Box is on the right object.
+3. Position roughly fits visible bounds.
+4. Not a duplicate.
 
-需要修改的情况：
+**Edit** when:
 
-1. 框偏移到旁边目标。
-2. 框太大，包含明显多余背景或其他目标。
-3. 框太小，切掉目标主体。
-4. 类别错误。
-5. 同一目标有多个框，需要保留最好一个，删除重复框。
+1. Box is on a neighboring object.
+2. Box is too large (extra background or other objects).
+3. Box is too small (crops main body).
+4. Wrong class.
+5. Multiple boxes on one object—keep the best, delete duplicates.
 
-需要删除的情况：
+**Delete** when:
 
-1. 框住不存在的目标。
-2. 框住不在 8 类范围内的目标。
-3. 框到阴影、反光、广告、路面标记等非目标。
-4. 与另一个框重复标注同一目标。
+1. Box on a non-existent object.
+2. Box on a non-target class.
+3. Box on shadow, glare, ad, or road marking.
+4. Duplicate of another box on the same object.
 
-需要新增的情况：
+**Add** when:
 
-1. 图片中存在目标但没有参考框。
-2. 参考框漏掉小目标、远处目标或被遮挡但可识别目标。
-3. 一组相邻目标被错误合成一个框，需要拆成多个目标框。
+1. Target present but no reference box.
+2. Reference missed small, distant, or partially occluded targets.
+3. Multiple objects incorrectly merged—split into separate boxes.
 
-## 9. 常见错误
+## 9. Common errors
 
-严重错误：
+**Serious**
 
-1. 漏掉明显目标。
-2. 将 car 标成 truck，或将 bus 标成 truck。
-3. 将 rider 标成 pedestrian。
-4. 将交通灯和交通标志混淆。
-5. 把多个目标合成一个框。
-6. 保留明显错误的参考框。
-7. 对不存在的物体画框。
+1. Missing obvious targets.
+2. Confusing car/truck or bus/truck.
+3. Labeling riders as pedestrians.
+4. Confusing traffic lights and signs.
+5. Merging multiple objects into one box.
+6. Keeping clearly wrong reference boxes.
+7. Boxing non-existent objects.
 
-一般错误：
+**Minor**
 
-1. 框略大或略小，但目标主体仍清楚。
-2. 框边界没有紧贴目标。
-3. 小目标漏标但可见性较差。
+1. Slightly loose or tight boxes with clear target.
+2. Edges not fully tight.
+3. Missing small low-visibility targets.
 
-重复错误：
+**Duplicate**
 
-1. 同一目标被画了两个或多个框。
-2. 原参考框未删除，又新增了一个修正框。
+1. Two+ boxes on one object.
+2. Keeping a reference box and adding a corrected duplicate without deleting the old one.
 
-## 10. 提交前检查清单
+## 10. Pre-submit checklist
 
-提交每张图前，标注员应快速检查：
+Before each submit:
 
-1. 是否只标注 8 个指定类别。
-2. 是否漏掉明显车辆、行人、骑行者、交通灯、交通标志。
-3. 每个框是否贴合目标可见外轮廓。
-4. 每个框的类别是否正确。
-5. 是否有重复框。
-6. 是否有参考框没有检查。
-7. 是否误框了不存在的物体或不相关物体。
+1. Only the 8 allowed classes used.
+2. No missed obvious vehicles, pedestrians, riders, lights, or signs.
+3. Each box fits visible contour.
+4. Each class is correct.
+5. No duplicate boxes.
+6. All reference boxes reviewed.
+7. No spurious or irrelevant boxes.
 
-## 11. 暂停与恢复
+## 11. Pause and resume
 
-如果中途需要离开：
+To step away:
 
-1. 点击“暂停计时”。
-2. 不要关闭或切换参与者编号。
-3. 回来后点击“继续计时”。
-4. 如浏览器关闭，重新打开系统，输入同一个参与者编号，点击“继续上次 / 开始下一张”。
+1. Click **Pause timer**.
+2. Do not change participant ID.
+3. Click **Resume timer** when back.
+4. If the browser closed, reopen, enter the same ID, click **Resume / Start next image**.
 
-恢复规则：
+Recovery rules:
 
-1. 系统按参与者编号恢复未提交任务。
-2. 参与者编号必须唯一且固定。
-3. 两个人不能共用同一个编号。
-4. 一个标注员不能随意更换编号。
+1. Unsubmitted work restores by participant ID.
+2. IDs must be unique and fixed.
+3. Two people cannot share one ID.
+4. Do not switch IDs mid-study.
 
-## 12. 质检与通过标准
+## 12. QA and pass criteria
 
-建议研究者按以下标准质检：
+Researchers should:
 
-1. 每名标注员先完成 5 到 10 张练习图。
-2. 练习图通过后再进入正式任务。
-3. 正式阶段抽查至少 5% 到 10% 的已提交图片。
-4. 对高风险标注员增加抽查比例。
+1. Require 5–10 practice images per annotator.
+2. Start formal work only after practice passes.
+3. Spot-check 5–10% of submissions in production.
+4. Increase sampling for high-risk annotators.
 
-建议合格标准：
+Suggested pass thresholds:
 
-1. 明显目标漏标率低于 5%。
-2. 严重类别错误率低于 3%。
-3. 重复框率低于 3%。
-4. 大框偏移或框错目标的比例低于 5%。
-5. 能按要求使用暂停、恢复和提交流程。
+1. Obvious miss rate &lt; 5%.
+2. Serious class-error rate &lt; 3%.
+3. Duplicate-box rate &lt; 3%.
+4. Large offset / wrong-object rate &lt; 5%.
+5. Correct use of pause, resume, and submit.
 
-如标注员连续出现严重错误，应暂停其正式任务，重新培训后再决定是否继续。
+Pause formal work and retrain annotators with repeated serious errors.
 
-## 13. 研究者招募记录字段
+## 13. Recruitment record fields
 
-建议记录以下信息：
+| Field | Description |
+|---|---|
+| annotator_id | Unique participant ID |
+| training_passed | Passed practice QA |
+| training_images | Number of practice images |
+| formal_start_time | Formal start time |
+| formal_end_time | Formal end time |
+| notes | Issues, equipment problems, QA notes |
 
-| 字段 | 说明 |
-| --- | --- |
-| annotator_id | 唯一参与者编号 |
-| training_passed | 是否通过练习质检 |
-| training_images | 练习图片数量 |
-| formal_start_time | 正式开始时间 |
-| formal_end_time | 正式结束时间 |
-| notes | 异常情况、设备问题、质检备注 |
+Do not store unnecessary PII in the annotation system. Store names, contact, or payment info separately from annotation data.
 
-不要在标注系统中记录不必要的个人敏感信息。若项目需要收集姓名、联系方式或报酬信息，应另行保存，并与标注数据分离。
+## 14. Training demo URLs
 
-## 14. 培训示例入口
+For annotator training only:
 
-可使用以下临时页面给标注员演示：
+1. Three-condition comparison: `/demo/examples`
+2. Practice UI: `/demo/practice`
 
-1. 三类对照页：`/demo/examples`
-2. 练习界面：`/demo/practice`
+These pages do not claim real tasks, accept submissions, or write to the database.
 
-这些页面只用于培训展示，不领取正式任务，不提交结果，不写入数据库。
+## 15. Internal reminder for researchers
 
-## 15. 研究者内部提醒
-
-如果本项目属于机构伦理审查或课程/论文研究，请按所在机构要求完成知情同意、数据保护和报酬说明。本文件只规定标注执行标准，不替代伦理审查或用工协议。
-
+If this project requires IRB, course, or employment review, follow your institution’s consent, data-protection, and compensation policies. This document defines annotation standards only—it does not replace ethics review or employment agreements.
