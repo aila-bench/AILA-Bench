@@ -450,7 +450,8 @@ function CaseFrame({
     color: string;
     label?: string;
     zIndex?: number;
-    labelPosition?: 'top' | 'bottom' | 'center';
+    labelPosition?: 'top' | 'bottom';
+    labelAlign?: 'left' | 'right';
   }[];
   className?: string;
 }) {
@@ -463,8 +464,8 @@ function CaseFrame({
       />
       {boxes.map((b, i) => {
         const [x, y, w, h] = b.bbox;
-        const labelAbove = b.labelPosition === 'top';
-        const labelCenter = b.labelPosition === 'center';
+        const labelAbove = b.labelPosition !== 'bottom';
+        const alignRight = b.labelAlign === 'right';
         return (
           <div
             key={i}
@@ -481,11 +482,9 @@ function CaseFrame({
             {b.label && (
               <span
                 className={`absolute px-1 py-0.5 text-[10px] font-medium text-white whitespace-nowrap ${
-                  labelCenter
-                    ? 'left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded shadow-sm max-w-[95%] truncate'
-                    : labelAbove
-                      ? 'left-0 bottom-full rounded-tl rounded-tr'
-                      : 'left-0 top-full rounded-bl rounded-br'
+                  labelAbove
+                    ? `${alignRight ? 'right-0' : 'left-0'} bottom-full rounded-tl rounded-tr`
+                    : `${alignRight ? 'right-0' : 'left-0'} top-full rounded-bl rounded-br`
                 }`}
                 style={{ backgroundColor: b.color }}
               >
@@ -506,7 +505,8 @@ function caseGalleryBoxes(c: AnnotationCase, withLabels = true) {
     color: string;
     label?: string;
     zIndex: number;
-    labelPosition: 'top' | 'bottom' | 'center';
+    labelPosition: 'top' | 'bottom';
+    labelAlign?: 'left' | 'right';
   }[] = [];
 
   if (c.focus.ai) {
@@ -538,7 +538,8 @@ function caseGalleryBoxes(c: AnnotationCase, withLabels = true) {
       color: FINAL_COLOR,
       label: withLabels ? `Final: ${fin.class}${err}` : 'Final',
       zIndex: 30,
-      labelPosition: 'center',
+      labelPosition: 'top',
+      labelAlign: 'right',
     });
   }
   return out;
@@ -702,12 +703,6 @@ function CaseGallery() {
                         <span className="text-muted">AI→final IoU</span>{' '}
                         <span className="text-ink font-mono">
                           {hr.aiFinalIou != null ? hr.aiFinalIou.toFixed(2) : '—'}
-                        </span>
-                      </div>
-                      <div>
-                        <span className="text-muted">Edit dist.</span>{' '}
-                        <span className="text-ink font-mono">
-                          {hr.bboxEditDistance != null ? hr.bboxEditDistance.toFixed(3) : '—'}
                         </span>
                       </div>
                       <div>
