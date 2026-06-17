@@ -3,7 +3,6 @@ import {
   AlertCircle,
   ArrowRight,
   BarChart3,
-  BookOpen,
   Database,
   Eye,
   Target,
@@ -89,11 +88,9 @@ function Navigation() {
   const [isOpen, setIsOpen] = useState(false);
   const navItems = [
     { label: 'Overview', href: '#overview' },
-    { label: 'Metrics', href: '#metrics' },
     { label: 'Demo', href: '#demo' },
     { label: 'Cases', href: '#cases' },
     { label: 'Results', href: '#results' },
-    { label: 'Resources', href: '#resources' },
   ];
 
   return (
@@ -296,94 +293,6 @@ function OverviewSection() {
                 </span>
               ))}
             </div>
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function EvaluationFramework() {
-  const fderModes = [
-    { key: 'FDER-box', desc: 'Bounding-box localization errors' },
-    { key: 'FDER-class', desc: 'Wrong object class assigned' },
-    { key: 'FDER-miss', desc: 'Objects missed in final labels' },
-    { key: 'FDER-fp', desc: 'False-positive detections kept' },
-    { key: 'FDER-dup', desc: 'Duplicate boxes on the same object' },
-  ];
-
-  return (
-    <section id="metrics" className="py-24 scroll-mt-20 bg-white/45 border-y border-line">
-      <div className="max-w-6xl mx-auto px-5">
-        <SectionHeader eyebrow="Evaluation framework" title="What we measure">
-          AILA-Bench separates the <strong className="font-semibold text-ink">noise
-          phenomenon</strong>, how we <strong className="font-semibold text-ink">score final
-          annotation quality</strong>, and how we <strong className="font-semibold text-ink">prioritize
-          labels for audit</strong> under a limited review budget.
-        </SectionHeader>
-
-        <div className="grid md:grid-cols-3 gap-5">
-          {/* 1 — Phenomenon */}
-          <div className="card p-6">
-            <p className="text-xs uppercase tracking-wide text-muted mb-2">1 · Phenomenon</p>
-            <h3 className="font-serif text-xl text-ink mb-3">SCLN</h3>
-            <p className="text-sm text-muted leading-relaxed mb-4">
-              <strong className="font-semibold text-ink">Suggestion-Conditioned Label Noise</strong>{' '}
-              is error introduced when a human label is shaped by an AI suggestion — not independent
-              human mistakes, and not model error alone.
-            </p>
-            <p className="text-sm text-muted leading-relaxed">
-              The case gallery shows where YOLO11 diverges from ground truth; FDER and SCLNScore
-              quantify how that divergence ends up in final labels.
-            </p>
-          </div>
-
-          {/* 2 — Quality */}
-          <div className="card p-6">
-            <p className="text-xs uppercase tracking-wide text-muted mb-2">2 · Quality</p>
-            <h3 className="font-serif text-xl text-ink mb-3">FDER</h3>
-            <p className="text-sm text-muted leading-relaxed mb-4">
-              <strong className="font-semibold text-ink">Final Detection Error Rate</strong> breaks
-              annotation quality into five error modes, compared across the three experimental
-              conditions.
-            </p>
-            <ul className="space-y-2">
-              {fderModes.map((m) => (
-                <li key={m.key} className="flex items-start gap-2 text-sm">
-                  <span className="font-mono text-[11px] text-accent shrink-0 mt-0.5">{m.key}</span>
-                  <span className="text-muted">{m.desc}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* 3 — Audit */}
-          <div className="card p-6">
-            <p className="text-xs uppercase tracking-wide text-muted mb-2">3 · Audit</p>
-            <h3 className="font-serif text-xl text-ink mb-3">SCLNScore</h3>
-            <p className="text-sm text-muted leading-relaxed mb-4">
-              A risk score for ranking which labels to re-review when audit budget is limited.
-            </p>
-            <div className="card sheen-indigo p-4 mb-4 border-l-4 border-l-accent">
-              <p className="font-serif text-base text-ink italic leading-snug">
-                “Would this annotation be correct if the human had worked alone?”
-              </p>
-            </div>
-            <div className="card sheen-metal p-3">
-              <p className="text-[11px] uppercase tracking-wide text-muted mb-2">Formula</p>
-              <div className="font-mono text-xs leading-relaxed">
-                <span className="text-accent">SCLNScore</span>
-                <span className="text-muted"> = </span>
-                <span className="text-teal">p₁</span>
-                <span className="text-muted">(error | AI, trace)</span>
-                <span className="text-muted"> − </span>
-                <span className="text-ink">p₀</span>
-                <span className="text-muted">(error | human-only)</span>
-              </div>
-            </div>
-            <p className="text-xs text-muted mt-3 leading-relaxed">
-              High scores flag labels the AI suggestion likely pushed into error.
-            </p>
           </div>
         </div>
       </div>
@@ -1179,66 +1088,6 @@ function RQ5Panel() {
   );
 }
 
-function ResourcesSection() {
-  return (
-    <section id="resources" className="py-24 scroll-mt-20 bg-white/45 border-t border-line">
-      <div className="max-w-5xl mx-auto px-5">
-        <SectionHeader eyebrow="Resources" title="Use the benchmark">
-          The dataset, traces, and documentation needed to reproduce and build on AILA-Bench.
-        </SectionHeader>
-
-        <div className="grid md:grid-cols-2 gap-5">
-          <a href="#" className="card p-6 group hover:-translate-y-0.5 hover:shadow-lift transition-all">
-            <div className="flex items-center gap-3 mb-3">
-              <span className="inline-flex p-2.5 rounded-full bg-teal-tint text-teal">
-                <Database className="w-5 h-5" />
-              </span>
-              <span className="font-serif text-lg text-ink group-hover:text-accent transition-colors">
-                Dataset
-              </span>
-            </div>
-            <p className="text-sm text-muted leading-relaxed">
-              The benchmark dataset with interaction traces, AI suggestions, and gold annotations.
-            </p>
-          </a>
-          <a href="#" className="card p-6 group hover:-translate-y-0.5 hover:shadow-lift transition-all">
-            <div className="flex items-center gap-3 mb-3">
-              <span className="inline-flex p-2.5 rounded-full bg-accent-tint text-accent">
-                <BookOpen className="w-5 h-5" />
-              </span>
-              <span className="font-serif text-lg text-ink group-hover:text-accent transition-colors">
-                Documentation
-              </span>
-            </div>
-            <p className="text-sm text-muted leading-relaxed">
-              How to load the data, compute SCLNScore, and reproduce each research question.
-            </p>
-          </a>
-        </div>
-
-        <div className="mt-5 card p-6 md:p-7">
-          <h3 className="font-serif text-lg text-ink mb-5">License &amp; ethics</h3>
-          <div className="grid md:grid-cols-2 gap-7 text-sm text-muted">
-            <div>
-              <p className="text-ink font-medium mb-1.5">Data license</p>
-              <p className="leading-relaxed">
-                MIT License for code, CC-BY-4.0 for data. BDD100K images retain their original
-                license.
-              </p>
-            </div>
-            <div>
-              <p className="text-ink font-medium mb-1.5">Ethics</p>
-              <p className="leading-relaxed">
-                IRB approved. Annotators compensated above minimum wage. All data anonymized.
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-}
-
 function Footer() {
   return (
     <footer className="py-10 border-t border-line">
@@ -1263,11 +1112,9 @@ function App() {
       <main>
         <Hero />
         <OverviewSection />
-        <EvaluationFramework />
         <DemoViewer />
         <CaseGallery />
         <ResultsExplorer />
-        <ResourcesSection />
       </main>
       <Footer />
     </div>
