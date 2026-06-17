@@ -101,7 +101,7 @@ export const rq5Data = {
   placeholder: true,
 };
 
-// Benchmark overview stats
+// Benchmark overview stats (confirmed scale for the public demo)
 export const benchmarkStats = {
   annotators: 370,
   images: 100000,

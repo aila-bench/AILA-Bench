@@ -141,10 +141,10 @@ function Navigation() {
 
 function Hero() {
   const stats = [
-    { value: 'xxx', label: 'Annotators' },
-    { value: 'xxx', label: 'BDD100K images' },
-    { value: '3', label: 'Conditions' },
-    { value: '8', label: 'Object classes' },
+    { value: benchmarkStats.annotators.toLocaleString('en-US'), label: 'Annotators' },
+    { value: benchmarkStats.images.toLocaleString('en-US'), label: 'BDD100K images' },
+    { value: String(benchmarkStats.conditions), label: 'Conditions' },
+    { value: String(benchmarkStats.numClasses), label: 'Object classes' },
   ];
   return (
     <section className="relative overflow-hidden">
