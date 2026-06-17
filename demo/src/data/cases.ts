@@ -32,6 +32,7 @@ export interface HumanReview {
   taskId: number;
   condition: string;
   decision: HumanDecision;
+  reviewTimeMs: number;
   reviewTimeSynthetic: boolean;
   bboxEditDistance: number | null;
   aiFinalIou: number | null;
@@ -66,6 +67,7 @@ interface HumanReviewEntry {
   task_id: number;
   condition: string;
   decision: HumanDecision;
+  review_time_ms: number;
   review_time_synthetic: boolean;
   bbox_edit_distance: number | null;
   ai_final_iou: number | null;
@@ -115,6 +117,7 @@ function mapHumanReview(entry: HumanReviewEntry): HumanReview {
     taskId: entry.task_id,
     condition: entry.condition,
     decision: entry.decision,
+    reviewTimeMs: entry.review_time_ms,
     reviewTimeSynthetic: entry.review_time_synthetic,
     bboxEditDistance: entry.bbox_edit_distance,
     aiFinalIou: entry.ai_final_iou,
@@ -151,6 +154,15 @@ export const cases: AnnotationCase[] = (manifest.cases as unknown as ManifestEnt
 export const viewerCase: AnnotationCase = build(manifest.viewer as unknown as ManifestEntry);
 
 export const humanReviewAvailable = cases.every((c) => c.humanReview != null);
+
+export function formatReviewTime(ms: number): string {
+  if (ms >= 60_000) {
+    const m = Math.floor(ms / 60_000);
+    const s = Math.round((ms % 60_000) / 1000);
+    return s > 0 ? `${m}m ${s}s` : `${m}m`;
+  }
+  return `${(ms / 1000).toFixed(1)}s`;
+}
 
 export function decisionLabel(decision: HumanDecision): string {
   const labels: Record<HumanDecision, string> = {

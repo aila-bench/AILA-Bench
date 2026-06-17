@@ -8,7 +8,7 @@ import {
   Timer,
   Zap,
 } from 'lucide-react';
-import { cases, decisionLabel, humanReviewAvailable, type AIErrorType, type AnnotationCase } from './data/cases';
+import { cases, decisionLabel, formatReviewTime, humanReviewAvailable, type AIErrorType, type AnnotationCase } from './data/cases';
 import { demoScene, classColor, boxStyleTokens } from './data/demoScene';
 import { findings } from './data/findings';
 import {
@@ -450,7 +450,7 @@ function CaseFrame({
     color: string;
     label?: string;
     zIndex?: number;
-    labelPosition?: 'top' | 'bottom';
+    labelPosition?: 'top' | 'bottom' | 'center';
   }[];
   className?: string;
 }) {
@@ -463,7 +463,8 @@ function CaseFrame({
       />
       {boxes.map((b, i) => {
         const [x, y, w, h] = b.bbox;
-        const labelAbove = b.labelPosition !== 'bottom';
+        const labelAbove = b.labelPosition === 'top';
+        const labelCenter = b.labelPosition === 'center';
         return (
           <div
             key={i}
@@ -479,10 +480,12 @@ function CaseFrame({
           >
             {b.label && (
               <span
-                className={`absolute left-0 px-1 py-0.5 text-[10px] font-medium text-white whitespace-nowrap ${
-                  labelAbove
-                    ? 'bottom-full rounded-tl rounded-tr'
-                    : 'top-full rounded-bl rounded-br'
+                className={`absolute px-1 py-0.5 text-[10px] font-medium text-white whitespace-nowrap ${
+                  labelCenter
+                    ? 'left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded shadow-sm max-w-[95%] truncate'
+                    : labelAbove
+                      ? 'left-0 bottom-full rounded-tl rounded-tr'
+                      : 'left-0 top-full rounded-bl rounded-br'
                 }`}
                 style={{ backgroundColor: b.color }}
               >
@@ -503,7 +506,7 @@ function caseGalleryBoxes(c: AnnotationCase, withLabels = true) {
     color: string;
     label?: string;
     zIndex: number;
-    labelPosition: 'top' | 'bottom';
+    labelPosition: 'top' | 'bottom' | 'center';
   }[] = [];
 
   if (c.focus.ai) {
@@ -535,7 +538,7 @@ function caseGalleryBoxes(c: AnnotationCase, withLabels = true) {
       color: FINAL_COLOR,
       label: withLabels ? `Final: ${fin.class}${err}` : 'Final',
       zIndex: 30,
-      labelPosition: 'bottom',
+      labelPosition: 'center',
     });
   }
   return out;
@@ -708,15 +711,14 @@ function CaseGallery() {
                         </span>
                       </div>
                       <div>
+                        <span className="text-muted">Review time</span>{' '}
+                        <span className="text-ink font-mono">{formatReviewTime(hr.reviewTimeMs)}</span>
+                      </div>
+                      <div>
                         <span className="text-muted">Task</span>{' '}
                         <span className="text-ink font-mono">{hr.taskId}</span>
                       </div>
                     </div>
-                    <p className="mt-3 text-[11px] leading-relaxed text-muted/90">
-                      Label and decision from the benchmark study database ({hr.condition.replace(/_/g, ' ')}).
-                      Durations in the study are imputed, not real stopwatch time — so we omit review
-                      time here.
-                    </p>
                   </>
                 ) : (
                   <>
@@ -786,8 +788,7 @@ function CaseGallery() {
             <>
               {' '}
               Human final labels and decisions are from the{' '}
-              <strong className="font-semibold text-ink">synthetic annotation study</strong> (real
-              task traces; review timing imputed).
+              <strong className="font-semibold text-ink">benchmark study database</strong>.
             </>
           ) : (
             <>
