@@ -1,8 +1,5 @@
-// RQ1-RQ5 Results - Placeholder metrics for the demo site
-// All values are illustrative and pending final results.
-// RQ definitions follow the paper:
-//   RQ1 error modes, RQ2 high-confidence acceptance, RQ3 SCLNScore vs review
-//   strategies, RQ4 feature-importance ablation, RQ5 cross-dataset transfer.
+// RQ1–RQ3: measured results from outputs/report/ (synced from server).
+// RQ4–RQ5: still pending.
 
 export interface ChartData {
   labels: string[];
@@ -11,63 +8,148 @@ export interface ChartData {
     data: number[];
     color: string;
   }[];
-  placeholder: true;
+  placeholder: boolean;
 }
 
-// RQ1: Are AI-assisted annotation errors different from Human-only errors?
+export const studyStats = {
+  totalLabels: 272_888,
+  totalErrors: 86_680,
+  overallErrorRate: 0.3176,
+  aurocScln: 0.648,
+  auprcScln: 0.469,
+  auprcRandomBaseline: 0.3176,
+};
+
 export const rq1Data = {
   title: 'RQ1: Error Modes',
   question: 'Do AI-assisted annotation errors differ from Human-only errors?',
   answer:
-    'AI assistance **does not reduce the overall final error rate**, but it **reshapes the error profile**: annotators tend to **preserve the AI box-localization and class errors** instead of producing independent human mistakes.',
-  // Final Detection Error Rate breakdown by condition (%)
+    'Overall FDER is similar across conditions (**32.9%** AI-assisted vs **31.5%** human-only), but the **error mix shifts**: AI-assisted labels carry more **bbox errors and false positives**, while human-only has slightly more **class errors** and **misses**.',
+  overallFder: {
+    labels: ['Human-only', 'AI-assisted', 'AI + Confidence'],
+    values: [31.5, 32.9, 30.8],
+  },
+  conditions: [
+    { key: 'human_only', labels: 93_715, errors: 29_548, fder: 31.5 },
+    { key: 'ai_assisted', labels: 90_345, errors: 29_748, fder: 32.9 },
+    { key: 'ai_assisted_confidence', labels: 88_828, errors: 27_384, fder: 30.8 },
+  ],
   fderByCondition: {
     labels: ['FDER-box', 'FDER-class', 'FDER-miss', 'FDER-fp', 'FDER-dup'],
-    humanOnly: [9, 5, 8, 2, 1],
-    aiAssisted: [11, 8, 5, 4, 3],
-    aiAssistedConf: [11, 9, 5, 4, 3],
+    humanOnly: [12.0, 4.0, 0.2, 10.3, 1.2],
+    aiAssisted: [13.9, 3.8, 0.3, 10.1, 1.2],
+    aiAssistedConf: [11.5, 4.1, 0.2, 10.0, 1.2],
   },
-  placeholder: true,
+  placeholder: false,
 };
 
-// RQ2: Are high-confidence wrong AI suggestions accepted more often?
 export const rq2Data = {
-  title: 'RQ2: High-Confidence Error Acceptance',
-  question: 'Are wrong AI suggestions accepted more often when AI confidence is high?',
+  title: 'RQ2: AI Error Inheritance',
+  question: 'When AI gives a wrong suggestion, do humans inherit the same error — especially at high confidence?',
   answer:
-    'Acceptance of wrong suggestions is **largely insensitive to AI confidence** (about **xxx at low vs xxx at high**), so **high confidence does not keep errors out** — even though annotators report higher subjective confidence (xxx).',
-  acceptanceByConfidence: {
-    labels: ['Low (bottom 33%)', 'Medium (mid 33%)', 'High (top 33%)'],
-    correctAcceptance: [62, 78, 91],
-    wrongAcceptance: [55, 60, 64],
+    'Among final labels linked to a wrong AI suggestion, **72.5%** keep the **same error type**. This rises from **66.4%** (AI conf 0.25–0.50) to **87.5%** (conf 0.75–1.00) — high-confidence wrong suggestions are **more likely to be inherited unchanged**.',
+  inheritanceByConfidence: {
+    labels: ['0.25–0.50', '0.50–0.75', '0.75–1.00'],
+    sameErrorInherited: [66.4, 72.6, 87.5],
+    aiWrongRate: [43.3, 18.9, 6.0],
   },
-  selfReportedConfidence: {
-    humanOnly: 4.6,
-    aiAssisted: 5.8,
-    aiAssistedWithConf: 5.9,
+  summary: {
+    sourceLinkedFinalLabels: 51_633,
+    fromWrongAi: 8_691,
+    sameErrorInherited: 6_298,
+    overallInheritanceRate: 72.5,
   },
-  placeholder: true,
+  placeholder: false,
 };
 
-// RQ3: Does SCLNScore beat traditional re-review strategies under a budget?
+export interface ReviewPolicyRow {
+  name: string;
+  auprc: number | null;
+  precisionAt1: number;
+  precisionAt5: number;
+  recallAt5: number;
+  recallAt10: number;
+  recallAt20: number;
+}
+
 export const rq3Data = {
   title: 'RQ3: SCLNScore vs Review Strategies',
   question: 'Under a limited review budget, does SCLNScore beat traditional re-review strategies?',
   answer:
-    'SCLNScore **ranks AI-contaminated labels best** at small budgets, finding about **xxx more than random** review at a fixed budget and reaching **AUPRC xxx vs xxx** for Confident Learning. Confidence-based review is **close to random**.',
+    'SCLNScore reaches **AUPRC 0.469** (AUROC **0.648**). At **P@5%** it scores **0.595** vs **0.317** random — while **high-confidence review collapses** (P@1% **0.021**). High-loss / Confident Learning rank by oracle error labels and are **not deployable**; SCLNScore is the best practical policy among blind methods.',
+  sclnMetrics: {
+    auroc: studyStats.aurocScln,
+    auprc: studyStats.auprcScln,
+    randomAuprcBaseline: studyStats.auprcRandomBaseline,
+  },
   policies: [
-    { name: 'Random', auprc: 0.3, recallAt1: 0.012, recallAt5: 0.058, recallAt10: 0.115, recallAt20: 0.22 },
-    { name: 'Low-confidence', auprc: 0.31, recallAt1: 0.018, recallAt5: 0.07, recallAt10: 0.13, recallAt20: 0.24 },
-    { name: 'High-confidence', auprc: 0.29, recallAt1: 0.014, recallAt5: 0.06, recallAt10: 0.12, recallAt20: 0.225 },
-    { name: 'High-loss', auprc: 0.34, recallAt1: 0.03, recallAt5: 0.1, recallAt10: 0.18, recallAt20: 0.3 },
-    { name: 'Ensemble disagreement', auprc: 0.33, recallAt1: 0.028, recallAt5: 0.095, recallAt10: 0.175, recallAt20: 0.295 },
-    { name: 'Confident Learning', auprc: 0.3, recallAt1: 0.025, recallAt5: 0.09, recallAt10: 0.165, recallAt20: 0.285 },
-    { name: 'SCLNScore', auprc: 0.49, recallAt1: 0.12, recallAt5: 0.33, recallAt10: 0.47, recallAt20: 0.64 },
-  ],
-  placeholder: true,
+    {
+      name: 'Random',
+      auprc: null,
+      precisionAt1: 0.314,
+      precisionAt5: 0.317,
+      recallAt5: 0.05,
+      recallAt10: 0.1,
+      recallAt20: 0.2,
+    },
+    {
+      name: 'Low-confidence',
+      auprc: null,
+      precisionAt1: 0.325,
+      precisionAt5: 0.321,
+      recallAt5: 0.05,
+      recallAt10: 0.101,
+      recallAt20: 0.2,
+    },
+    {
+      name: 'High-confidence',
+      auprc: null,
+      precisionAt1: 0.021,
+      precisionAt5: 0.043,
+      recallAt5: 0.007,
+      recallAt10: 0.023,
+      recallAt20: 0.073,
+    },
+    {
+      name: 'Ensemble disagreement',
+      auprc: null,
+      precisionAt1: 0.679,
+      precisionAt5: 0.573,
+      recallAt5: 0.09,
+      recallAt10: 0.159,
+      recallAt20: 0.277,
+    },
+    {
+      name: 'SCLNScore',
+      auprc: studyStats.auprcScln,
+      precisionAt1: 0.734,
+      precisionAt5: 0.595,
+      recallAt5: 0.094,
+      recallAt10: 0.175,
+      recallAt20: 0.32,
+    },
+    {
+      name: 'High-loss',
+      auprc: null,
+      precisionAt1: 1.0,
+      precisionAt5: 1.0,
+      recallAt5: 0.157,
+      recallAt10: 0.315,
+      recallAt20: 0.63,
+    },
+    {
+      name: 'Confident learning',
+      auprc: null,
+      precisionAt1: 1.0,
+      precisionAt5: 1.0,
+      recallAt5: 0.157,
+      recallAt10: 0.315,
+      recallAt20: 0.63,
+    },
+  ] satisfies ReviewPolicyRow[],
+  placeholder: false,
 };
 
-// RQ4: Which factors most affect AI-induced label noise? (feature-group ablation)
 export const rq4Data = {
   title: 'RQ4: Feature Importance (Ablation)',
   question: 'Which factors matter most for detecting AI-induced label noise?',
@@ -86,7 +168,6 @@ export const rq4Data = {
   placeholder: true,
 };
 
-// RQ5: Does SCLNScore trained on BDD100K transfer to other datasets?
 export const rq5Data = {
   title: 'RQ5: Cross-Dataset Transfer',
   question: 'Does SCLNScore trained on BDD100K generalize to other datasets?',
@@ -101,10 +182,9 @@ export const rq5Data = {
   placeholder: true,
 };
 
-// Benchmark overview stats (confirmed scale for the public demo)
 export const benchmarkStats = {
   annotators: 370,
-  images: 100000,
+  images: 100_000,
   conditions: 3,
   numClasses: 8,
   traceFields: [
@@ -127,7 +207,7 @@ export const benchmarkStats = {
     'traffic light',
     'traffic sign',
   ],
-  placeholder: true,
+  placeholder: false,
 };
 
-export const isPlaceholder = true;
+export const isPlaceholder = false;

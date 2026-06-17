@@ -1,0 +1,77 @@
+{
+  "notation": {
+    "externalId": "0062ab5a-54bb129b",
+    "exportFile": "export/notation_0062ab5a.json",
+    "imageFile": "public/flowchart/notation/0062ab5a-54bb129b.jpg",
+    "width": 1280,
+    "height": 720,
+    "story": "YOLO labels a Jeep as truck; the annotator largely accepts it → class_error vs GT.",
+    "confidenceVariant": { "taskId": 414, "confidence": 0.889, "suggestionId": 883 }
+  },
+  "rereview": {
+    "exportFile": "export/rereview_frames_large_bbox.csv",
+    "largeBboxAreaPx2": 15000,
+    "tiers": [
+      {
+        "budget": "1%",
+        "cutoffRank": 1791,
+        "rank": 1792,
+        "sclnScore": 0.635674,
+        "externalId": "0683345e-353c53d1",
+        "errorType": "correct",
+        "aiConfidence": 0.44955,
+        "finalClass": "car",
+        "bbox": [851.3, 246.4, 428.0, 223.6],
+        "bboxArea": 95693.9,
+        "frameFraction": 0.104,
+        "condition": "ai_assisted",
+        "caption": "Large car on right (bus scene)"
+      },
+      {
+        "budget": "5%",
+        "cutoffRank": 8958,
+        "rank": 8962,
+        "sclnScore": 0.511991,
+        "externalId": "0eaabe4f-e5b7f441",
+        "errorType": "class_error",
+        "aiConfidence": 0.544904,
+        "finalClass": "truck",
+        "bbox": [632.5, 289.9, 168.7, 158.0],
+        "bboxArea": 26661.6,
+        "frameFraction": 0.029,
+        "condition": "ai_assisted_confidence",
+        "caption": "Truck box, wrong class"
+      },
+      {
+        "budget": "10%",
+        "cutoffRank": 17917,
+        "rank": 17926,
+        "sclnScore": 0.459131,
+        "externalId": "02f94134-4bd5b308",
+        "errorType": "bbox_error",
+        "aiConfidence": 0.337494,
+        "finalClass": "truck",
+        "bbox": [657.3, 188.6, 177.1, 118.9],
+        "bboxArea": 21064.1,
+        "frameFraction": 0.023,
+        "condition": "ai_assisted",
+        "caption": "Truck box, localization error"
+      },
+      {
+        "budget": "20%",
+        "cutoffRank": 35834,
+        "rank": 35854,
+        "sclnScore": 0.368146,
+        "externalId": "144ddd02-b8f6bd11",
+        "errorType": "class_error",
+        "aiConfidence": 0.46059,
+        "finalClass": "truck",
+        "bbox": [0.3, 223.9, 232.8, 174.9],
+        "bboxArea": 40713.6,
+        "frameFraction": 0.044,
+        "condition": "ai_assisted",
+        "caption": "Large truck box on left"
+      }
+    ]
+  }
+}

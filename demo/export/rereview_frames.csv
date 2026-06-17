@@ -1,0 +1,5 @@
+budget_tier,rank,scln_score,image_external_id,image_path,label_id,task_id,error_type,ai_confidence,final_class,bbox,condition
+1%,1791,0.635717,18fa46ce-a531b51f,/data_hdd/lx20/AILA-Bench/data/bdd100k_prepared/bdd100k_images_100k/100k/train/18fa46ce-a531b51f.jpg,269643,29070,correct,0.300889,car,"[658.2, 288.2, 50.9, 18.7]",ai_assisted_confidence
+5%,8958,0.512021,066472f4-bd7192d6,/data_hdd/lx20/AILA-Bench/data/bdd100k_prepared/bdd100k_images_100k/100k/train/066472f4-bd7192d6.jpg,114415,7094,bbox_error,0.26965,car,"[165.2, 404.1, 84.8, 55.4]",ai_assisted
+10%,17917,0.45917,02d3ac59-ada9555d,/data_hdd/lx20/AILA-Bench/data/bdd100k_prepared/bdd100k_images_100k/100k/train/02d3ac59-ada9555d.jpg,102837,3101,correct,0.288073,car,"[341.3, 205.0, 25.4, 23.2]",ai_assisted
+20%,35834,0.368291,04d68e39-ec405659,/data_hdd/lx20/AILA-Bench/data/bdd100k_prepared/bdd100k_images_100k/100k/train/04d68e39-ec405659.jpg,199215,5418,correct,0.318127,car,"[295.7, 325.0, 29.1, 33.3]",ai_assisted_confidence

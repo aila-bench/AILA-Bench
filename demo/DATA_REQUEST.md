@@ -107,3 +107,22 @@ These require real `ai_assisted` / `ai_assisted_confidence` submissions (current
 
 Hand me the folder; I wire it into `demo/src/data/cases.ts` and `demoScene.ts`
 (box format already matches: `[x, y, w, h]` px, same 8 class names).
+
+---
+
+## 6. Paper flowchart exports (separate from demo website)
+
+For Figure 1 (Task & Notation) and Figure 2 (Re-review Ranking), run on server:
+
+```bash
+python3 demo/export_flowchart_data.py
+```
+
+Produces:
+
+| File | Contents |
+|---|---|
+| `demo/export/notation_0062ab5a.json` | GT / AI / final boxes for `0062ab5a-54bb129b` (tasks 413 & 414) |
+| `demo/export/rereview_frames.csv` | Top frames at 1% / 5% / 10% / 20% SCLNScore cutoffs + bbox |
+
+Requires `aila_bench.db` and `outputs/scln/features_scored.csv`. See `demo/FLOWCHART.md` for local sync and panel regeneration.

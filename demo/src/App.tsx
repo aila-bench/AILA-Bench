@@ -3,14 +3,13 @@ import {
   AlertCircle,
   ArrowRight,
   BarChart3,
-  Database,
   Eye,
   Target,
   Timer,
   Zap,
 } from 'lucide-react';
-import { cases, type AIErrorType, type CaseBox } from './data/cases';
-import { demoScene, classColor } from './data/demoScene';
+import { cases, decisionLabel, humanReviewAvailable, type AIErrorType, type AnnotationCase } from './data/cases';
+import { demoScene, classColor, boxStyleTokens } from './data/demoScene';
 import { findings } from './data/findings';
 import {
   rq1Data,
@@ -19,6 +18,7 @@ import {
   rq4Data,
   rq5Data,
   benchmarkStats,
+  studyStats,
 } from './data/results';
 
 type Condition = 'human_only' | 'ai_assisted' | 'ai_assisted_conf';
@@ -32,12 +32,13 @@ const COND = {
 const POS = '#0f6c78';
 const NEG = '#b23a48';
 
-// All metric numbers on the site are placeholders. While this is false, every
-// chart/table/figure renders "xxx" and neutral skeleton bars instead of values.
-// Once real results are entered (data files + prose), flip this to true.
-const SHOW_NUMBERS = false;
+// RQ1–RQ3 use measured results; RQ4–RQ5 remain placeholders until ablation / transfer runs.
 const PH = 'xxx';
 const SKELETON = '#c9c4ba';
+
+function showLive(placeholder: boolean) {
+  return !placeholder;
+}
 
 // Renders **bold** spans inside plain strings so we can highlight key phrases.
 function RichText({ text }: { text: string }) {
@@ -76,10 +77,14 @@ function SectionHeader({
 }
 
 function PlaceholderBanner() {
+  if (!rq4Data.placeholder && !rq5Data.placeholder) {
+    return null;
+  }
   return (
     <div className="bg-accent-tint text-accent text-center py-2 text-[13px] font-medium border-b border-line">
       <AlertCircle className="inline w-3.5 h-3.5 mr-2 -mt-0.5" />
-      Illustrative numbers — figures shown are placeholders pending final results
+      RQ1–RQ3 show measured results ({studyStats.totalLabels.toLocaleString('en-US')} labels). RQ4–RQ5
+      metrics are still placeholders.
     </div>
   );
 }
@@ -205,17 +210,14 @@ function Hero() {
 function OverviewSection() {
   const insightIcons: Record<string, React.ReactNode> = {
     'speed-accuracy': <Timer className="w-5 h-5" />,
-    confidence: <Zap className="w-5 h-5" />,
-    'wrong-low': <AlertCircle className="w-5 h-5" />,
-    'wrong-high': <AlertCircle className="w-5 h-5" />,
+    inheritance: <Zap className="w-5 h-5" />,
     'scln-random': <Target className="w-5 h-5" />,
     auprc: <BarChart3 className="w-5 h-5" />,
-    'cross-dataset': <Database className="w-5 h-5" />,
   };
   const keyInsights = findings.map((f) => ({
     icon: insightIcons[f.id] ?? <Target className="w-5 h-5" />,
     title: f.title,
-    value: f.value,
+    value: f.placeholder ? PH : f.value,
     desc: f.description,
   }));
 
@@ -245,24 +247,27 @@ function OverviewSection() {
 
         <div className="grid md:grid-cols-2 gap-5">
           <div className="card p-7">
-            <h3 className="font-serif text-xl text-ink mb-5">Experimental conditions</h3>
-            <ul className="space-y-4">
+            <h3 className="font-serif text-xl text-ink mb-5">Study scale (measured)</h3>
+            <ul className="space-y-3 text-sm mb-6">
+              <li className="flex justify-between gap-4 border-b border-line pb-3">
+                <span className="text-muted">Final labels</span>
+                <span className="text-ink font-mono">{studyStats.totalLabels.toLocaleString('en-US')}</span>
+              </li>
+              <li className="flex justify-between gap-4 border-b border-line pb-3">
+                <span className="text-muted">Error labels</span>
+                <span className="text-ink font-mono">{studyStats.totalErrors.toLocaleString('en-US')}</span>
+              </li>
+              <li className="flex justify-between gap-4 border-b border-line pb-3">
+                <span className="text-muted">Overall error rate</span>
+                <span className="text-ink font-mono">{(studyStats.overallErrorRate * 100).toFixed(1)}%</span>
+              </li>
+            </ul>
+            <h4 className="text-xs uppercase tracking-wide text-muted mb-3">Conditions</h4>
+            <ul className="space-y-3">
               {[
-                {
-                  c: COND.human_only,
-                  t: 'Human Only',
-                  d: 'Annotators work from scratch, with no AI assistance.',
-                },
-                {
-                  c: COND.ai_assisted,
-                  t: 'AI-Assisted',
-                  d: 'AI provides suggestions; no confidence is shown.',
-                },
-                {
-                  c: COND.ai_assisted_conf,
-                  t: 'AI-Assisted + Confidence',
-                  d: 'AI suggestions are shown together with confidence scores.',
-                },
+                { c: COND.human_only, t: 'Human Only', d: 'No AI assistance.' },
+                { c: COND.ai_assisted, t: 'AI-Assisted', d: 'Suggestions without confidence.' },
+                { c: COND.ai_assisted_conf, t: 'AI + Confidence', d: 'Suggestions with confidence scores.' },
               ].map((row) => (
                 <li key={row.t} className="flex items-start gap-3">
                   <span
@@ -270,8 +275,8 @@ function OverviewSection() {
                     style={{ backgroundColor: row.c }}
                   />
                   <div>
-                    <span className="text-ink font-medium">{row.t}</span>
-                    <p className="text-sm text-muted">{row.d}</p>
+                    <span className="text-ink font-medium text-sm">{row.t}</span>
+                    <p className="text-xs text-muted">{row.d}</p>
                   </div>
                 </li>
               ))}
@@ -313,8 +318,9 @@ function DemoViewer() {
     <section id="demo" className="py-24 scroll-mt-20">
       <div className="max-w-6xl mx-auto px-5">
         <SectionHeader eyebrow="Interactive demo" title="One frame, three conditions">
-          The same BDD100K frame under each annotation condition. Boxes and confidences are the
-          real YOLO11 pre-annotations for this image.
+          The same BDD100K frame under each annotation condition. Boxes and confidences are
+          real <strong className="font-semibold text-ink">YOLOv8 nano</strong> predictions for
+          this image.
         </SectionHeader>
 
         <div className="card p-6 md:p-8">
@@ -425,7 +431,9 @@ function DemoViewer() {
   );
 }
 
-const GT_COLOR = '#15803d';
+const GT_COLOR = boxStyleTokens.gtColor;
+const AI_FOCUS_COLOR = boxStyleTokens.aiFocusColor;
+const FINAL_COLOR = boxStyleTokens.finalColor;
 
 function CaseFrame({
   imagePath,
@@ -488,17 +496,8 @@ function CaseFrame({
   );
 }
 
-// Focus boxes (GT + AI) for a case. AI drawn first, GT on top. Labels staggered: GT above, AI below.
-function focusBoxes(
-  c: { focus: { gt: CaseBox | null; ai: CaseBox | null } },
-  withLabels = true,
-): {
-  bbox: [number, number, number, number];
-  color: string;
-  label?: string;
-  zIndex: number;
-  labelPosition: 'top' | 'bottom';
-}[] {
+// GT + AI + optional human final for case gallery detail view.
+function caseGalleryBoxes(c: AnnotationCase, withLabels = true) {
   const out: {
     bbox: [number, number, number, number];
     color: string;
@@ -506,12 +505,13 @@ function focusBoxes(
     zIndex: number;
     labelPosition: 'top' | 'bottom';
   }[] = [];
+
   if (c.focus.ai) {
     const conf = c.focus.ai.confidence;
     const pct = conf != null ? ` ${Math.round(conf * 100)}%` : '';
     out.push({
       bbox: c.focus.ai.bbox,
-      color: COND.ai_assisted,
+      color: AI_FOCUS_COLOR,
       label: withLabels ? `AI: ${c.focus.ai.class}${pct}` : 'AI',
       zIndex: 10,
       labelPosition: 'bottom',
@@ -524,6 +524,18 @@ function focusBoxes(
       label: withLabels ? `GT: ${c.focus.gt.class}` : 'GT',
       zIndex: 20,
       labelPosition: 'top',
+    });
+  }
+  if (c.humanReview) {
+    const fin = c.humanReview.final;
+    const err =
+      fin.errorType !== 'correct' ? ` (${fin.errorType.replace(/_/g, ' ')})` : '';
+    out.push({
+      bbox: fin.bbox,
+      color: FINAL_COLOR,
+      label: withLabels ? `Final: ${fin.class}${err}` : 'Final',
+      zIndex: 30,
+      labelPosition: 'bottom',
     });
   }
   return out;
@@ -553,16 +565,15 @@ function CaseGallery() {
   const c = cases.find((x) => x.id === selectedCase) ?? cases[0];
   const gt = c.focus.gt;
   const ai = c.focus.ai;
+  const hr = c.humanReview;
 
   return (
     <section id="cases" className="py-24 scroll-mt-20 bg-white/45 border-y border-line">
       <div className="max-w-7xl mx-auto px-5">
         <SectionHeader eyebrow="Case gallery" title="Anatomy of suggestion-conditioned errors">
-          Real BDD100K frames with their{' '}
-          <strong className="font-semibold text-ink">ground-truth and YOLO11 boxes</strong>. Pick a
-          case on the left; the{' '}
-          <strong className="font-semibold text-ink">human decision is what the benchmark
-          measures</strong> and is not yet collected.
+          Real BDD100K frames with{' '}
+          <strong className="font-semibold text-ink">ground truth, YOLOv8 nano suggestions, and human
+          final labels</strong> from the synthetic annotation study (task traces in the database).
         </SectionHeader>
 
         <div className="grid lg:grid-cols-3 gap-6 items-start">
@@ -582,19 +593,26 @@ function CaseGallery() {
               imagePath={c.imagePath}
               width={c.width}
               height={c.height}
-              boxes={focusBoxes(c)}
+              boxes={caseGalleryBoxes(c)}
               className="aspect-video"
             />
-            {!gt && ai && (
+            {c.errorType === 'hallucination' && hr?.decision === 'accept' && (
+              <p className="text-xs text-amber-800/90 mt-2 leading-relaxed bg-amber-50/80 border border-amber-200/80 rounded-lg px-3 py-2">
+                <strong className="font-semibold">Note:</strong> Ground truth has no bus here, but
+                the annotator <strong className="font-semibold">accepted</strong> the AI bus box
+                (wrong_object) rather than deleting it.
+              </p>
+            )}
+            {!gt && ai && c.errorType !== 'hallucination' && (
               <p className="text-xs text-muted mt-2 leading-relaxed">
                 <strong className="font-semibold text-ink">No ground-truth box</strong> for this
-                object — YOLO11 proposed a detection where none exists (hallucination).
+                object — the model proposed a detection where none exists (hallucination).
               </p>
             )}
             {gt && !ai && (
               <p className="text-xs text-muted mt-2 leading-relaxed">
                 <strong className="font-semibold text-ink">No AI box</strong> — this ground-truth
-                object was missed by YOLO11 (missing detection).
+                object was missed by the detector (missing detection).
               </p>
             )}
             <div className="flex flex-wrap items-center gap-4 mt-3 mb-5 text-xs">
@@ -611,6 +629,12 @@ function CaseGallery() {
                     style={{ backgroundColor: COND.ai_assisted }}
                   />
                   <span className="text-muted">AI suggestion</span>
+                </span>
+              )}
+              {hr && (
+                <span className="flex items-center gap-1.5">
+                  <span className="w-3 h-3 rounded-sm" style={{ backgroundColor: FINAL_COLOR }} />
+                  <span className="text-muted">Human final</span>
                 </span>
               )}
             </div>
@@ -643,34 +667,72 @@ function CaseGallery() {
                   </div>
                 </div>
                 <p className="mt-2.5 text-[11px] text-muted/80">
-                  Frame {c.externalId} · BDD100K · YOLO11
+                  Frame {c.externalId} · BDD100K · YOLOv8 nano
                 </p>
               </div>
 
               <div className="rounded-xl bg-white/70 border border-line p-4">
                 <p className="text-xs uppercase tracking-wide text-muted mb-3">
-                  Human review <span className="text-muted/60">· pending</span>
+                  Human review{' '}
+                  {hr ? (
+                    <span className="text-teal">· study trace</span>
+                  ) : (
+                    <span className="text-muted/60">· pending</span>
+                  )}
                 </p>
-                <div className="grid grid-cols-2 gap-y-2 gap-x-4 text-sm">
-                  <div>
-                    <span className="text-muted">Decision</span> <span className="text-ink">{PH}</span>
-                  </div>
-                  <div>
-                    <span className="text-muted">Review</span>{' '}
-                    <span className="text-ink font-mono">{PH}</span>
-                  </div>
-                  <div>
-                    <span className="text-muted">Edit dist.</span>{' '}
-                    <span className="text-ink font-mono">{PH}</span>
-                  </div>
-                  <div>
-                    <span className="text-muted">Final box</span> <span className="text-ink">{PH}</span>
-                  </div>
-                </div>
-                <p className="mt-3 text-[11px] leading-relaxed text-muted/90">
-                  Traces <strong className="font-semibold">not yet collected</strong> — pending real
-                  AI-assisted annotation.
-                </p>
+                {hr ? (
+                  <>
+                    <div className="grid grid-cols-2 gap-y-2 gap-x-4 text-sm">
+                      <div>
+                        <span className="text-muted">Decision</span>{' '}
+                        <span className="text-ink">{decisionLabel(hr.decision)}</span>
+                      </div>
+                      <div>
+                        <span className="text-muted">Final class</span>{' '}
+                        <span className="text-ink">{hr.final.class}</span>
+                      </div>
+                      <div>
+                        <span className="text-muted">Final error</span>{' '}
+                        <span className="text-ink font-mono text-xs">{hr.final.errorType}</span>
+                      </div>
+                      <div>
+                        <span className="text-muted">AI→final IoU</span>{' '}
+                        <span className="text-ink font-mono">
+                          {hr.aiFinalIou != null ? hr.aiFinalIou.toFixed(2) : '—'}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-muted">Edit dist.</span>{' '}
+                        <span className="text-ink font-mono">
+                          {hr.bboxEditDistance != null ? hr.bboxEditDistance.toFixed(3) : '—'}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-muted">Task</span>{' '}
+                        <span className="text-ink font-mono">{hr.taskId}</span>
+                      </div>
+                    </div>
+                    <p className="mt-3 text-[11px] leading-relaxed text-muted/90">
+                      Label and decision from the benchmark study database ({hr.condition.replace(/_/g, ' ')}).
+                      Durations in the study are imputed, not real stopwatch time — so we omit review
+                      time here.
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <div className="grid grid-cols-2 gap-y-2 gap-x-4 text-sm">
+                      <div>
+                        <span className="text-muted">Decision</span> <span className="text-ink">{PH}</span>
+                      </div>
+                      <div>
+                        <span className="text-muted">Final box</span> <span className="text-ink">{PH}</span>
+                      </div>
+                    </div>
+                    <p className="mt-3 text-[11px] leading-relaxed text-muted/90">
+                      Human trace not loaded for this case.
+                    </p>
+                  </>
+                )}
               </div>
             </div>
           </div>
@@ -692,7 +754,7 @@ function CaseGallery() {
                     imagePath={item.imagePath}
                     width={item.width}
                     height={item.height}
-                    boxes={focusBoxes(item, false)}
+                    boxes={caseGalleryBoxes(item, false)}
                     className="w-28 shrink-0 aspect-video"
                   />
                   <div className="min-w-0 flex-1">
@@ -705,7 +767,10 @@ function CaseGallery() {
                       {errorLabels[item.errorType]}
                     </span>
                     <p className="text-[11px] text-muted/70 mt-1.5 font-mono">
-                      {conf != null ? `AI ${Math.round(conf * 100)}%` : 'no AI box'} · human pending
+                      {conf != null ? `AI ${Math.round(conf * 100)}%` : 'no AI box'}
+                      {item.humanReview
+                        ? ` · ${decisionLabel(item.humanReview.decision)}`
+                        : ' · pending'}
                     </p>
                   </div>
                 </button>
@@ -715,10 +780,22 @@ function CaseGallery() {
         </div>
 
         <p className="text-center text-xs text-muted mt-8 max-w-2xl mx-auto">
-          Images, ground-truth and YOLO11 boxes are{' '}
-          <strong className="font-semibold text-ink">real BDD100K data</strong>. The{' '}
-          <strong className="font-semibold text-ink">human decision and interaction metrics</strong>{' '}
-          await real AI-assisted annotation and are shown as placeholders.
+          Images, GT, and detector boxes are <strong className="font-semibold text-ink">real BDD100K
+          data</strong> (YOLOv8 nano predictions).
+          {humanReviewAvailable ? (
+            <>
+              {' '}
+              Human final labels and decisions are from the{' '}
+              <strong className="font-semibold text-ink">synthetic annotation study</strong> (real
+              task traces; review timing imputed).
+            </>
+          ) : (
+            <>
+              {' '}
+              Human traces are shown where exported in{' '}
+              <code className="text-ink/80">cases_human_review.json</code>.
+            </>
+          )}
         </p>
       </div>
     </section>
@@ -739,8 +816,8 @@ function ResultsExplorer() {
     <section id="results" className="py-24 scroll-mt-20">
       <div className="max-w-6xl mx-auto px-5">
         <SectionHeader eyebrow="Results" title="Five research questions">
-          Benchmark results across the five questions that frame the study. All metrics shown are
-          placeholder values.
+          RQ1–RQ3 report measured results on {studyStats.totalLabels.toLocaleString('en-US')} final
+          labels. RQ4 (ablation) and RQ5 (transfer) are still pending.
         </SectionHeader>
 
         <div className="flex flex-wrap gap-2 mb-8 justify-center">
@@ -803,11 +880,13 @@ function BarChart({
   labels,
   maxValue,
   suffix = '',
+  live = true,
 }: {
   data: { label: string; values: number[]; color: string }[];
   labels: string[];
   maxValue: number;
   suffix?: string;
+  live?: boolean;
 }) {
   return (
     <div className="space-y-4">
@@ -820,7 +899,7 @@ function BarChart({
                 key={series.label}
                 className="h-6 rounded-full flex items-center justify-end pr-2.5 text-xs font-medium"
                 style={
-                  SHOW_NUMBERS
+                  live
                     ? {
                         width: `${Math.max((series.values[i] / maxValue) * 100, series.values[i] > 0 ? 9 : 0)}%`,
                         backgroundColor: series.color,
@@ -829,7 +908,7 @@ function BarChart({
                     : { width: '40%', backgroundColor: SKELETON, color: '#46505f' }
                 }
               >
-                {SHOW_NUMBERS ? `${series.values[i]}${suffix}` : PH}
+                {live ? `${series.values[i]}${suffix}` : PH}
               </div>
             ))}
           </div>
@@ -852,24 +931,26 @@ function MeterRow({
   display,
   pct,
   color,
+  live = true,
 }: {
   label: string;
   display: string;
   pct: number;
   color: string;
+  live?: boolean;
 }) {
   return (
     <div>
       <div className="flex justify-between text-sm mb-1.5">
         <span className="text-muted">{label}</span>
-        <span className="text-ink font-medium">{SHOW_NUMBERS ? display : PH}</span>
+        <span className="text-ink font-medium">{live ? display : PH}</span>
       </div>
       <div className="h-3.5 rounded-full bg-ink/[0.06] overflow-hidden">
         <div
           className="h-full rounded-full"
           style={{
-            width: SHOW_NUMBERS ? `${pct}%` : '42%',
-            backgroundColor: SHOW_NUMBERS ? color : SKELETON,
+            width: live ? `${pct}%` : '42%',
+            backgroundColor: live ? color : SKELETON,
           }}
         />
       </div>
@@ -878,13 +959,30 @@ function MeterRow({
 }
 
 function RQ1Panel() {
+  const live = showLive(rq1Data.placeholder);
   return (
     <div>
       <PanelHeading title={rq1Data.title} question={rq1Data.question} />
       <h4 className="text-xs uppercase tracking-wide text-muted mb-4">
-        Final detection error rate by condition (%)
+        Overall final detection error rate (%)
+      </h4>
+      <div className="grid sm:grid-cols-3 gap-4 mb-10">
+        {rq1Data.overallFder.labels.map((label, i) => (
+          <MeterRow
+            key={label}
+            label={label}
+            display={`${rq1Data.overallFder.values[i]}%`}
+            pct={(rq1Data.overallFder.values[i] / 40) * 100}
+            color={[COND.human_only, COND.ai_assisted, COND.ai_assisted_conf][i]}
+            live={live}
+          />
+        ))}
+      </div>
+      <h4 className="text-xs uppercase tracking-wide text-muted mb-4">
+        Error type rate by condition (% of labels)
       </h4>
       <BarChart
+        live={live}
         data={[
           { label: 'Human-only', values: rq1Data.fderByCondition.humanOnly, color: COND.human_only },
           { label: 'AI-assisted', values: rq1Data.fderByCondition.aiAssisted, color: COND.ai_assisted },
@@ -896,6 +994,7 @@ function RQ1Panel() {
         ]}
         labels={rq1Data.fderByCondition.labels}
         maxValue={15}
+        suffix="%"
       />
       <Answer color={POS} text={rq1Data.answer} />
     </div>
@@ -903,72 +1002,72 @@ function RQ1Panel() {
 }
 
 function RQ2Panel() {
+  const live = showLive(rq2Data.placeholder);
   return (
     <div>
       <PanelHeading title={rq2Data.title} question={rq2Data.question} />
-      <div className="grid md:grid-cols-2 gap-10">
-        <div>
-          <h4 className="text-xs uppercase tracking-wide text-muted mb-4">
-            Acceptance rate by AI confidence
-          </h4>
-          <BarChart
-            data={[
-              {
-                label: 'Correct',
-                values: rq2Data.acceptanceByConfidence.correctAcceptance,
-                color: POS,
-              },
-              {
-                label: 'Wrong',
-                values: rq2Data.acceptanceByConfidence.wrongAcceptance,
-                color: NEG,
-              },
-            ]}
-            labels={rq2Data.acceptanceByConfidence.labels}
-            maxValue={100}
-          />
-        </div>
-        <div>
-          <h4 className="text-xs uppercase tracking-wide text-muted mb-4">
-            Self-reported confidence (1–7)
-          </h4>
-          <div className="space-y-4">
-            {[
-              { label: 'Human Only', value: rq2Data.selfReportedConfidence.humanOnly, color: COND.human_only },
-              { label: 'AI-Assisted', value: rq2Data.selfReportedConfidence.aiAssisted, color: COND.ai_assisted },
-              {
-                label: 'AI-Assisted + Conf',
-                value: rq2Data.selfReportedConfidence.aiAssistedWithConf,
-                color: COND.ai_assisted_conf,
-              },
-            ].map((item) => (
-              <MeterRow
-                key={item.label}
-                label={item.label}
-                display={item.value.toString()}
-                pct={(item.value / 7) * 100}
-                color={item.color}
-              />
-            ))}
-          </div>
-        </div>
-      </div>
+      <p className="text-sm text-muted mb-6">
+        Among {rq2Data.summary.sourceLinkedFinalLabels.toLocaleString('en-US')} AI-linked final
+        labels, {rq2Data.summary.fromWrongAi.toLocaleString('en-US')} came from a wrong AI
+        suggestion;{' '}
+        <strong className="text-ink">{rq2Data.summary.overallInheritanceRate}%</strong> inherited
+        the same error type.
+      </p>
+      <h4 className="text-xs uppercase tracking-wide text-muted mb-4">
+        Same-error inheritance rate by AI confidence
+      </h4>
+      <BarChart
+        live={live}
+        data={[
+          {
+            label: 'Same error inherited',
+            values: rq2Data.inheritanceByConfidence.sameErrorInherited,
+            color: NEG,
+          },
+          {
+            label: 'AI suggestion wrong (context)',
+            values: rq2Data.inheritanceByConfidence.aiWrongRate,
+            color: '#94a3b8',
+          },
+        ]}
+        labels={rq2Data.inheritanceByConfidence.labels}
+        maxValue={100}
+        suffix="%"
+      />
       <Answer color={COND.ai_assisted_conf} text={rq2Data.answer} />
     </div>
   );
 }
 
 function RQ3Panel() {
+  const live = showLive(rq3Data.placeholder);
   return (
     <div>
       <PanelHeading title={rq3Data.title} question={rq3Data.question} />
+      <div className="flex flex-wrap gap-4 mb-6 p-4 rounded-xl bg-teal/5 border border-teal/15 text-sm">
+        <span>
+          <span className="text-muted">AUROC </span>
+          <span className="font-mono text-ink">{live ? rq3Data.sclnMetrics.auroc.toFixed(3) : PH}</span>
+        </span>
+        <span>
+          <span className="text-muted">AUPRC </span>
+          <span className="font-mono text-ink">{live ? rq3Data.sclnMetrics.auprc.toFixed(3) : PH}</span>
+        </span>
+        <span>
+          <span className="text-muted">Random baseline AUPRC </span>
+          <span className="font-mono text-ink">
+            {live ? rq3Data.sclnMetrics.randomAuprcBaseline.toFixed(3) : PH}
+          </span>
+        </span>
+      </div>
       <div className="overflow-x-auto -mx-2">
-        <table className="w-full text-sm min-w-[34rem]">
+        <table className="w-full text-sm min-w-[42rem]">
           <thead>
             <tr className="border-b border-line text-xs uppercase tracking-wide text-muted">
               <th className="text-left py-3 px-3 font-medium">Policy</th>
               <th className="text-right py-3 px-3 font-medium">AUPRC</th>
-              <th className="text-right py-3 px-3 font-medium">R@1%</th>
+              <th className="text-right py-3 px-3 font-medium">P@1%</th>
+              <th className="text-right py-3 px-3 font-medium">P@5%</th>
               <th className="text-right py-3 px-3 font-medium">R@5%</th>
               <th className="text-right py-3 px-3 font-medium">R@10%</th>
               <th className="text-right py-3 px-3 font-medium">R@20%</th>
@@ -977,6 +1076,7 @@ function RQ3Panel() {
           <tbody>
             {rq3Data.policies.map((policy) => {
               const highlight = policy.name === 'SCLNScore';
+              const oracle = policy.name === 'High-loss' || policy.name === 'Confident learning';
               return (
                 <tr
                   key={policy.name}
@@ -987,21 +1087,31 @@ function RQ3Panel() {
                     <span className={highlight ? 'text-teal font-semibold' : 'text-ink/80'}>
                       {policy.name}
                     </span>
+                    {oracle && (
+                      <span className="block text-[11px] text-muted mt-0.5">oracle (not deployable)</span>
+                    )}
                   </td>
                   <td className="text-right py-3 px-3 text-ink font-mono">
-                    {SHOW_NUMBERS ? policy.auprc.toFixed(2) : PH}
+                    {live
+                      ? policy.auprc != null
+                        ? policy.auprc.toFixed(3)
+                        : '—'
+                      : PH}
                   </td>
                   <td className="text-right py-3 px-3 text-ink font-mono">
-                    {SHOW_NUMBERS ? `${(policy.recallAt1 * 100).toFixed(1)}%` : PH}
+                    {live ? `${(policy.precisionAt1 * 100).toFixed(1)}%` : PH}
                   </td>
                   <td className="text-right py-3 px-3 text-ink font-mono">
-                    {SHOW_NUMBERS ? `${(policy.recallAt5 * 100).toFixed(1)}%` : PH}
+                    {live ? `${(policy.precisionAt5 * 100).toFixed(1)}%` : PH}
                   </td>
                   <td className="text-right py-3 px-3 text-ink font-mono">
-                    {SHOW_NUMBERS ? `${(policy.recallAt10 * 100).toFixed(1)}%` : PH}
+                    {live ? `${(policy.recallAt5 * 100).toFixed(1)}%` : PH}
                   </td>
                   <td className="text-right py-3 px-3 text-ink font-mono">
-                    {SHOW_NUMBERS ? `${(policy.recallAt20 * 100).toFixed(1)}%` : PH}
+                    {live ? `${(policy.recallAt10 * 100).toFixed(1)}%` : PH}
+                  </td>
+                  <td className="text-right py-3 px-3 text-ink font-mono">
+                    {live ? `${(policy.recallAt20 * 100).toFixed(1)}%` : PH}
                   </td>
                 </tr>
               );
@@ -1009,12 +1119,19 @@ function RQ3Panel() {
           </tbody>
         </table>
       </div>
+      <p className="text-xs text-muted mt-3 leading-relaxed">
+        <strong className="font-medium text-ink/80">AUPRC</strong> is computed for the trained
+        SCLNScore ranker only; other policies are heuristic rankers without a global score curve
+        (random baseline AUPRC ≈ {live ? rq3Data.sclnMetrics.randomAuprcBaseline.toFixed(3) : PH}{' '}
+        shown above).
+      </p>
       <Answer color={COND.human_only} text={rq3Data.answer} />
     </div>
   );
 }
 
 function RQ4Panel() {
+  const live = showLive(rq4Data.placeholder);
   const maxDrop = Math.max(...rq4Data.ablation.groups.map((g) => g.drop));
   return (
     <div>
@@ -1026,7 +1143,7 @@ function RQ4Panel() {
         <span className="text-xs text-muted">
           Full model AUPRC:{' '}
           <span className="text-ink font-mono">
-            {SHOW_NUMBERS ? rq4Data.ablation.full.toFixed(2) : PH}
+            {live ? rq4Data.ablation.full.toFixed(2) : PH}
           </span>
         </span>
       </div>
@@ -1036,7 +1153,7 @@ function RQ4Panel() {
             <div className="flex justify-between text-sm mb-1.5">
               <span className="text-muted">{g.name}</span>
               <span className="text-ink font-medium font-mono">
-                {SHOW_NUMBERS ? (
+                {live ? (
                   <>
                     −{g.drop.toFixed(2)}{' '}
                     <span className="text-muted">(AUPRC {g.auprc.toFixed(2)})</span>
@@ -1052,8 +1169,8 @@ function RQ4Panel() {
               <div
                 className="h-full rounded-full"
                 style={{
-                  width: SHOW_NUMBERS ? `${(g.drop / maxDrop) * 100}%` : '42%',
-                  backgroundColor: SHOW_NUMBERS ? NEG : SKELETON,
+                  width: live ? `${(g.drop / maxDrop) * 100}%` : '42%',
+                  backgroundColor: live ? NEG : SKELETON,
                 }}
               />
             </div>
@@ -1066,6 +1183,7 @@ function RQ4Panel() {
 }
 
 function RQ5Panel() {
+  const live = showLive(rq5Data.placeholder);
   return (
     <div>
       <PanelHeading title={rq5Data.title} question={rq5Data.question} />
@@ -1080,6 +1198,7 @@ function RQ5Panel() {
             display={result.auprc.toFixed(2)}
             pct={result.auprc * 100}
             color={COND.ai_assisted}
+            live={live}
           />
         ))}
       </div>

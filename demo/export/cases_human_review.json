@@ -1,0 +1,124 @@
+{
+  "cases": [
+    {
+      "case_id": "case-1",
+      "error_type_demo": "correct",
+      "external_id": "000f8d37-d4c09a0f",
+      "task_id": 83,
+      "condition": "ai_assisted",
+      "decision": "accept",
+      "review_time_ms": 169267,
+      "review_time_synthetic": true,
+      "bbox_edit_distance": 0.0,
+      "ai_final_iou": 0.9801,
+      "final": {
+        "label_id": 93778,
+        "class": "car",
+        "bbox": [
+          928.8,
+          283.5,
+          350.3,
+          376.3
+        ],
+        "error_type": "correct"
+      },
+      "source_suggestion_id": 162
+    },
+    {
+      "case_id": "case-2",
+      "error_type_demo": "class",
+      "external_id": "0062ab5a-54bb129b",
+      "task_id": 413,
+      "condition": "ai_assisted",
+      "decision": "accept",
+      "review_time_ms": 92259,
+      "review_time_synthetic": true,
+      "bbox_edit_distance": 0.0,
+      "ai_final_iou": 0.9754,
+      "final": {
+        "label_id": 94803,
+        "class": "truck",
+        "bbox": [
+          392.1,
+          260.5,
+          288.1,
+          194.6
+        ],
+        "error_type": "class_error"
+      },
+      "source_suggestion_id": 883
+    },
+    {
+      "case_id": "case-3",
+      "error_type_demo": "localization",
+      "external_id": "003e23ee-67d25f19",
+      "task_id": 281,
+      "condition": "ai_assisted",
+      "decision": "edit",
+      "review_time_ms": 65263,
+      "review_time_synthetic": true,
+      "bbox_edit_distance": 0.0056,
+      "ai_final_iou": 0.9423,
+      "final": {
+        "label_id": 94423,
+        "class": "car",
+        "bbox": [
+          1.5,
+          101.1,
+          675.9,
+          469.2
+        ],
+        "error_type": "correct"
+      },
+      "source_suggestion_id": 607
+    },
+    {
+      "case_id": "case-4",
+      "error_type_demo": "hallucination",
+      "external_id": "0062e803-38c0a33a",
+      "task_id": 416,
+      "condition": "ai_assisted",
+      "decision": "accept",
+      "review_time_ms": 111811,
+      "review_time_synthetic": true,
+      "bbox_edit_distance": 0.0,
+      "ai_final_iou": 0.9531,
+      "final": {
+        "label_id": 94829,
+        "class": "bus",
+        "bbox": [
+          941.0,
+          260.4,
+          338.1,
+          358.3
+        ],
+        "error_type": "wrong_object"
+      },
+      "source_suggestion_id": 895
+    },
+    {
+      "case_id": "case-5",
+      "error_type_demo": "missing",
+      "external_id": "0077ccb8-d5778190",
+      "task_id": 530,
+      "condition": "ai_assisted",
+      "decision": "create",
+      "review_time_ms": 117789,
+      "review_time_synthetic": true,
+      "bbox_edit_distance": null,
+      "ai_final_iou": null,
+      "final": {
+        "label_id": 95168,
+        "class": "car",
+        "bbox": [
+          936.8,
+          327.0,
+          342.2,
+          259.8
+        ],
+        "error_type": "correct"
+      },
+      "source_suggestion_id": null
+    }
+  ]
+}

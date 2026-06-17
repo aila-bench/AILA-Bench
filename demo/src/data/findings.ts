@@ -1,64 +1,45 @@
-// TL;DR Key Findings - Placeholder numbers for the demo site
-// All values are illustrative and pending final results
-
 export interface Finding {
   id: string;
   title: string;
   value: string;
   description: string;
-  placeholder: true;
+  placeholder: boolean;
 }
 
+// Top four headline findings for the Overview grid (RQ1, RQ2, RQ3).
 export const findings: Finding[] = [
   {
     id: 'speed-accuracy',
-    title: 'Speed & Accuracy',
-    value: 'No significant improvement',
-    description: 'AI suggestions **do not improve** annotation speed or accuracy versus the human-only baseline.',
-    placeholder: true,
+    title: 'No Accuracy Gain',
+    value: '32.9% vs 31.5%',
+    description:
+      'AI-assisted **final error rate (FDER)** is not lower than human-only — suggestions did **not improve** label accuracy overall.',
+    placeholder: false,
   },
   {
-    id: 'confidence',
-    title: 'Self-Reported Confidence',
-    value: 'xxx',
-    description: 'Annotators reported **higher subjective confidence** when using AI assistance (scale 1–7).',
-    placeholder: true,
-  },
-  {
-    id: 'wrong-low',
-    title: 'Wrong Acceptance (Low Conf)',
-    value: 'xxx',
-    description: 'Acceptance rate of **incorrect suggestions** when AI confidence was **low**.',
-    placeholder: true,
-  },
-  {
-    id: 'wrong-high',
-    title: 'Wrong Acceptance (High Conf)',
-    value: 'xxx',
-    description: 'Acceptance rate of **incorrect suggestions** when AI confidence was **high** — barely different from low.',
-    placeholder: true,
+    id: 'inheritance',
+    title: 'Error Inheritance',
+    value: '66% → 88%',
+    description:
+      'When AI was wrong, humans kept the **same error type** in **72.5%** of cases — rising from **66%** (low AI conf) to **88%** (high conf).',
+    placeholder: false,
   },
   {
     id: 'scln-random',
     title: 'SCLNScore vs Random',
-    value: 'xxx',
-    description: 'SCLNScore finds **many more** contaminated labels than random sampling at a fixed review budget.',
-    placeholder: true,
+    value: '59.5% vs 31.7%',
+    description:
+      'At a **5% review budget**, SCLNScore **Precision@K** nearly **doubles** random sampling.',
+    placeholder: false,
   },
   {
     id: 'auprc',
-    title: 'AUPRC Improvement',
-    value: 'xxx',
-    description: 'SCLNScore AUPRC versus **Confident Learning**, the strongest baseline.',
-    placeholder: true,
-  },
-  {
-    id: 'cross-dataset',
-    title: 'Cross-Dataset Transfer',
-    value: 'xxx',
-    description: 'SCLNScore AUPRC when **transferring from BDD100K to nuImages** with no retraining.',
-    placeholder: true,
+    title: 'SCLNScore Ranking',
+    value: 'AUPRC 0.469',
+    description:
+      'Global label ranking quality (**AUROC 0.648**), versus **0.318** random baseline (positive rate).',
+    placeholder: false,
   },
 ];
 
-export const isPlaceholder = true;
+export const isPlaceholder = false;

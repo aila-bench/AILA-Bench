@@ -1,0 +1,21 @@
+{
+  "borderWidthPx": 2,
+  "labelFontSizePx": 10,
+  "labelPadX": 4,
+  "labelPadY": 2,
+  "gtColor": "#15803d",
+  "aiFocusColor": "#2f6fb0",
+  "aiStoryFocusColor": "#eab308",
+  "finalColor": "#c2410c",
+  "classColors": {
+    "car": "#3b82f6",
+    "pedestrian": "#ef4444",
+    "rider": "#f97316",
+    "bus": "#a855f7",
+    "truck": "#eab308",
+    "motorcycle": "#ec4899",
+    "traffic light": "#06b6d4",
+    "traffic sign": "#22c55e",
+    "none": "#64748b"
+  }
+}

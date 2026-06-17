@@ -1,14 +1,9 @@
-// SCLN Case Gallery — real BDD100K frames with real ground-truth and YOLO11 boxes.
+// SCLN Case Gallery — real BDD100K frames with real ground-truth, YOLO11, and human final labels.
 //
-// Data source: cases_manifest.json (generated on the server by demo/generate_cases.py
-// from data/bdd100k_prepared + bdd100k_labels + outputs/bdd100k/yolo11_predictions.jsonl).
-// Every image, ground-truth box, AI box, confidence and GT–AI IoU below is REAL.
-//
-// What is intentionally NOT here (no real data collected yet): the human-final box and
-// human interaction metrics (accept/edit/reject, review time, edit distance). Those require
-// real ai_assisted / ai_assisted_confidence annotation and are shown as "pending" in the UI.
+// GT / AI: cases_manifest.json. Human review: cases_human_review.json.
 
 import manifest from './cases_manifest.json';
+import humanReviewManifest from './cases_human_review.json';
 import { publicPath } from '../publicPath';
 
 export type AIErrorType =
@@ -20,11 +15,28 @@ export type AIErrorType =
   | 'wrong_object'
   | 'correct';
 
+export type HumanDecision = 'accept' | 'edit' | 'create' | 'delete' | 'edit_class';
+
 export interface CaseBox {
   class: string;
-  // [x, y, width, height] in image pixel coordinates
   bbox: [number, number, number, number];
   confidence?: number;
+}
+
+export interface HumanFinalLabel extends CaseBox {
+  labelId: number;
+  errorType: string;
+}
+
+export interface HumanReview {
+  taskId: number;
+  condition: string;
+  decision: HumanDecision;
+  reviewTimeSynthetic: boolean;
+  bboxEditDistance: number | null;
+  aiFinalIou: number | null;
+  final: HumanFinalLabel;
+  sourceSuggestionId: number | null;
 }
 
 export interface AnnotationCase {
@@ -38,6 +50,7 @@ export interface AnnotationCase {
   errorType: AIErrorType;
   focus: { gt: CaseBox | null; ai: CaseBox | null; iou: number };
   allBoxes: { gt: CaseBox[]; ai: CaseBox[] };
+  humanReview: HumanReview | null;
 }
 
 interface ManifestEntry {
@@ -48,38 +61,76 @@ interface ManifestEntry {
   allBoxes: { gt: CaseBox[]; ai: CaseBox[] };
 }
 
-// Hand-written copy per case. Strictly describes the model output and the task the
-// annotator faces — never a recorded human action (we have none yet).
+interface HumanReviewEntry {
+  case_id: string;
+  task_id: number;
+  condition: string;
+  decision: HumanDecision;
+  review_time_synthetic: boolean;
+  bbox_edit_distance: number | null;
+  ai_final_iou: number | null;
+  final: {
+    label_id: number;
+    class: string;
+    bbox: [number, number, number, number];
+    error_type: string;
+  };
+  source_suggestion_id: number | null;
+}
+
 const copy: Record<string, { title: string; description: string }> = {
   'case-1': {
     title: 'Correct suggestion',
     description:
-      'YOLO11 proposes this car with high confidence and near-perfect overlap with ground truth. A correct suggestion the annotator should simply accept — our positive control.',
+      'The detector proposes this car with high confidence and near-perfect overlap with ground truth. The annotator accepted the suggestion unchanged — our positive control.',
   },
   'case-2': {
     title: 'Class confusion',
     description:
-      'The box is well-placed, but YOLO11 labels this car as a truck. A plausible-looking wrong class is exactly the kind of error that tends to slip through review.',
+      'The box is well-placed, but YOLOv8 nano labels this Jeep as a truck. The annotator accepted the suggestion without correcting the class — a class_error versus ground-truth car.',
   },
   'case-3': {
     title: 'Localization error',
     description:
-      'Right class, wrong extent: the suggested car box is far larger than the true object (low GT–AI IoU). The annotator would need to resize it.',
+      'Right class, wrong extent: the suggested car box was far too large. The annotator edited the bbox toward the true object size before submitting.',
   },
   'case-4': {
     title: 'Hallucination',
     description:
-      'YOLO11 proposes a bus where ground truth has no such object — a false positive the annotator must reject.',
+      'The model proposes a bus where no such object exists in ground truth. The annotator accepted the false positive rather than deleting it — final label is wrong_object.',
   },
   'case-5': {
     title: 'Missing object',
     description:
-      'A real car in ground truth that YOLO11 did not detect. With no suggestion to react to, the annotator has to add it from scratch.',
+      'A real car in ground truth that the detector did not flag. With no AI suggestion, the annotator added a new box from scratch.',
   },
 };
 
+const humanByCaseId = new Map(
+  (humanReviewManifest.cases as HumanReviewEntry[]).map((row) => [row.case_id, row]),
+);
+
+function mapHumanReview(entry: HumanReviewEntry): HumanReview {
+  return {
+    taskId: entry.task_id,
+    condition: entry.condition,
+    decision: entry.decision,
+    reviewTimeSynthetic: entry.review_time_synthetic,
+    bboxEditDistance: entry.bbox_edit_distance,
+    aiFinalIou: entry.ai_final_iou,
+    final: {
+      labelId: entry.final.label_id,
+      class: entry.final.class,
+      bbox: entry.final.bbox,
+      errorType: entry.final.error_type,
+    },
+    sourceSuggestionId: entry.source_suggestion_id,
+  };
+}
+
 function build(entry: ManifestEntry): AnnotationCase {
   const c = copy[entry.id] ?? { title: entry.id, description: '' };
+  const humanEntry = humanByCaseId.get(entry.id);
   return {
     id: entry.id,
     title: c.title,
@@ -91,10 +142,23 @@ function build(entry: ManifestEntry): AnnotationCase {
     errorType: entry.errorType as AIErrorType,
     focus: entry.focus,
     allBoxes: entry.allBoxes,
+    humanReview: humanEntry ? mapHumanReview(humanEntry) : null,
   };
 }
 
 export const cases: AnnotationCase[] = (manifest.cases as unknown as ManifestEntry[]).map(build);
 
-// Optional clean frame available for the interactive viewer (real GT + YOLO11 boxes).
 export const viewerCase: AnnotationCase = build(manifest.viewer as unknown as ManifestEntry);
+
+export const humanReviewAvailable = cases.every((c) => c.humanReview != null);
+
+export function decisionLabel(decision: HumanDecision): string {
+  const labels: Record<HumanDecision, string> = {
+    accept: 'Accept',
+    edit: 'Edit bbox',
+    create: 'Add box',
+    delete: 'Delete',
+    edit_class: 'Edit class',
+  };
+  return labels[decision];
+}
