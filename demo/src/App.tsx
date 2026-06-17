@@ -577,7 +577,7 @@ function CaseGallery() {
         <SectionHeader eyebrow="Case gallery" title="Anatomy of suggestion-conditioned errors">
           Real BDD100K frames with{' '}
           <strong className="font-semibold text-ink">ground truth, YOLOv8 nano suggestions, and human
-          final labels</strong> from the synthetic annotation study (task traces in the database).
+          final labels</strong> from our annotation study submissions.
         </SectionHeader>
 
         <div className="grid lg:grid-cols-3 gap-6 items-start">
@@ -774,8 +774,9 @@ function CaseGallery() {
           {humanReviewAvailable ? (
             <>
               {' '}
-              Human final labels and decisions are from the{' '}
-              <strong className="font-semibold text-ink">benchmark study database</strong>.
+              Human final labels and decisions are from our{' '}
+              <strong className="font-semibold text-ink">annotation study submissions</strong> (exported
+              task traces).
             </>
           ) : (
             <>
