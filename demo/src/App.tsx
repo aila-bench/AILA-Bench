@@ -32,7 +32,7 @@ const COND = {
 const POS = '#0f6c78';
 const NEG = '#b23a48';
 
-// RQ1–RQ3 use measured results; RQ4–RQ5 remain placeholders until ablation / transfer runs.
+// RQ1–RQ3 & RQ5 use measured results; RQ4 remains placeholder until ablation runs.
 const PH = 'xxx';
 const SKELETON = '#c9c4ba';
 
@@ -77,14 +77,15 @@ function SectionHeader({
 }
 
 function PlaceholderBanner() {
-  if (!rq4Data.placeholder && !rq5Data.placeholder) {
+  if (!rq4Data.placeholder) {
     return null;
   }
   return (
     <div className="bg-accent-tint text-accent text-center py-2 text-[13px] font-medium border-b border-line">
       <AlertCircle className="inline w-3.5 h-3.5 mr-2 -mt-0.5" />
-      RQ1–RQ3 show measured results ({studyStats.totalLabels.toLocaleString('en-US')} labels). RQ4–RQ5
-      metrics are still placeholders.
+      RQ1–RQ3 and RQ5 show measured results ({studyStats.totalLabels.toLocaleString('en-US')} BDD
+      labels; nuImages transfer on {rq5Data.nuImagesImages.toLocaleString('en-US')} images). RQ4
+      ablation metrics are still placeholders.
     </div>
   );
 }
@@ -806,7 +807,8 @@ function ResultsExplorer() {
       <div className="max-w-6xl mx-auto px-5">
         <SectionHeader eyebrow="Results" title="Five research questions">
           RQ1–RQ3 report measured results on {studyStats.totalLabels.toLocaleString('en-US')} final
-          labels. RQ4 (ablation) and RQ5 (transfer) are still pending.
+          BDD labels; RQ5 reports BDD→nuImages transfer on{' '}
+          {rq5Data.nuImagesImages.toLocaleString('en-US')} images. RQ4 (ablation) is still pending.
         </SectionHeader>
 
         <div className="flex flex-wrap gap-2 mb-8 justify-center">
@@ -1173,24 +1175,71 @@ function RQ4Panel() {
 
 function RQ5Panel() {
   const live = showLive(rq5Data.placeholder);
+  const bddColor = COND.ai_assisted;
+  const nuColor = '#d97706';
+
+  function formatMetric(row: (typeof rq5Data.metrics)[number], value: number): string {
+    if (row.isPercent) return `${value.toFixed(1)}%`;
+    return value.toFixed(3);
+  }
+
+  function barWidth(row: (typeof rq5Data.metrics)[number], value: number): number {
+    const max = row.isPercent ? 40 : 0.7;
+    return Math.max((value / max) * 100, value > 0 ? 8 : 0);
+  }
+
   return (
     <div>
       <PanelHeading title={rq5Data.title} question={rq5Data.question} />
+      <p className="text-sm text-muted mb-6 leading-relaxed">
+        BDD-trained SCLNScore applied to nuImages v1.0-test (
+        {rq5Data.nuImagesImages.toLocaleString('en-US')} images, YOLOv8 suggestions, official 2D
+        gold labels). Same export, matching, and ranking pipeline as BDD100K — no retraining on
+        nuImages.
+      </p>
       <h4 className="text-xs uppercase tracking-wide text-muted mb-4">
-        Cross-dataset transfer AUPRC
+        Cross-dataset ranking (BDD-trained scorer)
       </h4>
-      <div className="space-y-4">
-        {rq5Data.transferResults.map((result) => (
-          <MeterRow
-            key={`${result.source}-${result.target}`}
-            label={`${result.source} → ${result.target}`}
-            display={result.auprc.toFixed(2)}
-            pct={result.auprc * 100}
-            color={COND.ai_assisted}
-            live={live}
-          />
+      <div className="space-y-5 mb-2">
+        {rq5Data.metrics.map((row) => (
+          <div key={row.label}>
+            <span className="text-sm text-muted">{row.label}</span>
+            <div className="grid sm:grid-cols-2 gap-3 mt-2">
+              {(
+                [
+                  { key: 'bdd', label: 'BDD → BDD', value: row.bddInDomain, color: bddColor },
+                  { key: 'nu', label: 'BDD → nuImages', value: row.bddToNuImages, color: nuColor },
+                ] as const
+              ).map((series) => (
+                <div key={series.key}>
+                  <div className="flex justify-between text-xs mb-1">
+                    <span className="text-muted">{series.label}</span>
+                    <span className="text-ink font-mono font-medium">
+                      {live ? formatMetric(row, series.value) : PH}
+                    </span>
+                  </div>
+                  <div className="h-7 rounded-full bg-ink/[0.06] overflow-hidden">
+                    <div
+                      className="h-full rounded-full flex items-center justify-end pr-2 text-[11px] font-medium text-white"
+                      style={{
+                        width: live ? `${barWidth(row, series.value)}%` : '42%',
+                        backgroundColor: live ? series.color : SKELETON,
+                        color: live ? '#fff' : '#46505f',
+                      }}
+                    >
+                      {live ? formatMetric(row, series.value) : PH}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
         ))}
       </div>
+      <p className="text-[11px] text-muted/90 mt-4 leading-relaxed">
+        Err. rate is the positive (error) rate and doubles as the AUPRC baseline for random ranking.
+        Higher AUROC, AUPRC, and R@10% indicate more effective error ranking.
+      </p>
       <Answer color={COND.human_only} text={rq5Data.answer} />
     </div>
   );

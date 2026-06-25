@@ -1,5 +1,5 @@
-// RQ1–RQ3: measured results from outputs/report/ (synced from server).
-// RQ4–RQ5: still pending.
+// RQ1–RQ3 & RQ5: measured results from outputs/report/ (synced from server).
+// RQ4: still pending.
 
 export interface ChartData {
   labels: string[];
@@ -168,18 +168,27 @@ export const rq4Data = {
   placeholder: true,
 };
 
+export interface TransferMetric {
+  label: string;
+  bddInDomain: number;
+  bddToNuImages: number;
+  /** When true, values are error rates in percent (e.g. 31.8). */
+  isPercent?: boolean;
+}
+
 export const rq5Data = {
   title: 'RQ5: Cross-Dataset Transfer',
-  question: 'Does SCLNScore trained on BDD100K generalize to other datasets?',
+  question: 'Can SCLNScore trained on BDD100K transfer to other datasets?',
   answer:
-    'Cross-dataset performance drops versus in-domain but **stays well above baselines**; transferring BDD100K to nuImages **keeps AUPRC at xxx**, and a small amount of **target fine-tuning recovers most of the gap**.',
-  transferResults: [
-    { source: 'BDD100K', target: 'BDD100K (in-domain)', auprc: 0.49 },
-    { source: 'BDD100K', target: 'nuImages (cross-domain)', auprc: 0.38 },
-    { source: 'BDD100K', target: 'nuImages (+ fine-tune)', auprc: 0.45 },
-    { source: 'BDD100K', target: 'Waymo 2D (cross-domain)', auprc: 0.36 },
-  ],
-  placeholder: true,
+    'After transfer to nuImages, ranking metrics decrease: AUROC **0.665 → 0.607**, AUPRC **0.472 → 0.418**, R@10% **0.174 → 0.126**. nuImages error rate is **30.8%** (random AUPRC baseline); transferred AUPRC **0.418** is **11.0 pp above** that baseline — without retraining, SCLNScore still ranks erroneous labels ahead of random review.',
+  nuImagesImages: 9_752,
+  metrics: [
+    { label: 'Err. rate', bddInDomain: 31.8, bddToNuImages: 30.8, isPercent: true },
+    { label: 'AUROC', bddInDomain: 0.665, bddToNuImages: 0.607 },
+    { label: 'AUPRC', bddInDomain: 0.472, bddToNuImages: 0.418 },
+    { label: 'R@10%', bddInDomain: 0.174, bddToNuImages: 0.126 },
+  ] satisfies TransferMetric[],
+  placeholder: false,
 };
 
 export const benchmarkStats = {
