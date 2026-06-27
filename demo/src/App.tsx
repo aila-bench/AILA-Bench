@@ -623,18 +623,6 @@ function CaseGallery() {
                 (wrong_object) rather than deleting it.
               </p>
             )}
-            {!gt && ai && c.errorType !== 'hallucination' && (
-              <p className="text-xs text-muted mt-2 leading-relaxed">
-                <strong className="font-semibold text-ink">No ground-truth box</strong> for this
-                object — the model proposed a detection where none exists (hallucination).
-              </p>
-            )}
-            {gt && !ai && (
-              <p className="text-xs text-muted mt-2 leading-relaxed">
-                <strong className="font-semibold text-ink">No AI box</strong> — this ground-truth
-                object was missed by the detector (missing detection).
-              </p>
-            )}
             <div className="flex flex-wrap items-center gap-4 mt-3 text-xs">
               {gt && (
                 <span className="flex items-center gap-1.5">
@@ -658,11 +646,6 @@ function CaseGallery() {
                 </span>
               )}
             </div>
-            <p className="text-[11px] text-muted/90 mb-5 leading-relaxed">
-              Display note: boxes shown are the focal pair for this error type only. Annotators worked
-              on the full frame with all objects; other GT, AI, and final boxes are omitted here for
-              readability.
-            </p>
 
             <div className="grid sm:grid-cols-2 gap-4">
               <div className="rounded-xl bg-white/70 border border-line p-4">
