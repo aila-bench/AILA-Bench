@@ -11,7 +11,7 @@ export interface ChartData {
 }
 
 export const studyStats = {
-  pilot: 'BDD100K pilot',
+  studyLabel: 'BDD100K benchmark',
   tasksPerCondition: 100_000,
   labelsByCondition: {
     human_only: 837_153,
@@ -27,7 +27,7 @@ export const rq1Data = {
   title: 'RQ1: Error Modes',
   question: 'Do AI-assisted annotation errors differ from Human-only errors?',
   pilotNote:
-    'BDD100K pilot (Table tab:rq1a). Task-level review_time_ms is logged in interaction traces; it is omitted from this summary table.',
+    'Task-level review_time_ms is logged in interaction traces. Summary tables below report final-label error rates and review-policy metrics on the full benchmark export.',
   answer:
     'Overall FDER is similar across conditions (**32.9%** AI-assisted vs **31.5%** human-only), but the **error mix shifts**: AI-assisted labels carry far more **bbox errors (13.9% vs 3.9%)** and fewer **misses (0.3% vs 11.6%)**; false-positive rates stay near **10–12%**.',
   overallFder: {
@@ -135,9 +135,9 @@ export const rq3Data = {
   title: 'RQ3: SCLNScore vs Review Strategies',
   question: 'Under a limited review budget, does SCLNScore beat traditional re-review strategies?',
   scorerNote:
-    'SCLNScore is the trained ranking model used for review prioritization on the full benchmark export. These metrics are **not** the appendix logistic-regression ablation in RQ4.',
+    'SCLNScore is the trained ranking model used for review prioritization on the full benchmark export. These metrics are **not** the logistic-regression feature ablation in RQ4.',
   answer:
-    'SCLNScore reaches **AUPRC 0.469** (AUROC **0.648**). At **P@5%** it scores **59.5%** vs **31.7%** random — while **high-confidence review collapses** (P@1% **2.1%**). SCLNScore is the best deployable policy in the pilot comparison.',
+    'SCLNScore reaches **AUPRC 0.469** (AUROC **0.648**). At **P@5%** it scores **59.5%** vs **31.7%** random — while **high-confidence review collapses** (P@1% **2.1%**). SCLNScore is the best deployable policy in this comparison.',
   sclnMetrics: {
     auroc: studyStats.aurocScln,
     auprc: studyStats.auprcScln,
@@ -222,7 +222,7 @@ export const rq4Data = {
   title: 'RQ4: Feature Importance (Ablation)',
   question: 'Which factors matter most for ranking final-label error risk?',
   appendixNote:
-    'Appendix ablation only: class-balanced logistic regression on 17 grouped features, with an image-level train/test split. This is a **separate model** from the SCLNScore ranker in RQ3 — higher AUPRC here reflects a different evaluator and held-out split, not a better deployable ranker.',
+    'Feature ablation using class-balanced logistic regression on 17 grouped features, with an image-level train/test split. This is a **separate model** from the SCLNScore ranker in RQ3 — higher AUPRC here reflects a different evaluator and held-out split, not a better deployable ranker.',
   modelLabel: 'Class-balanced logistic regression (full 17 features)',
   answer:
     'The full model reaches **AUPRC 0.678** (AUROC **0.781**), well above the **0.320** random baseline. **Object** is the strongest group (group-only AUPRC **0.566**; removing it drops AUPRC by **0.112**). **AI** features rank second (AUPRC **0.522**, drop **0.083**). **Trace** and **Interface+Time** add weaker but useful signals; **category** is the top single feature (AUPRC **0.507**, lift **1.586**).',

@@ -237,7 +237,7 @@ function OverviewSection() {
 
         <div className="grid md:grid-cols-2 gap-5">
           <div className="card p-7">
-            <h3 className="font-serif text-xl text-ink mb-5">Pilot scale (Table tab:rq1a)</h3>
+            <h3 className="font-serif text-xl text-ink mb-5">Study scale</h3>
             <ul className="space-y-3 text-sm mb-6">
               <li className="flex justify-between gap-4 border-b border-line pb-3">
                 <span className="text-muted">Tasks per condition</span>
@@ -258,7 +258,9 @@ function OverviewSection() {
                 </span>
               </li>
             </ul>
-            <p className="text-xs text-muted leading-relaxed">{rq1Data.pilotNote}</p>
+            <p className="text-xs text-muted leading-relaxed">
+              <RichText text={rq1Data.pilotNote} />
+            </p>
             <h4 className="text-xs uppercase tracking-wide text-muted mb-3">Conditions</h4>
             <ul className="space-y-3">
               {[
@@ -809,12 +811,11 @@ function ResultsExplorer() {
     <section id="results" className="py-24 scroll-mt-20">
       <div className="max-w-6xl mx-auto px-5">
         <SectionHeader eyebrow="Results" title="Five research questions">
-          RQ1–RQ3 report the {studyStats.pilot} ({studyStats.tasksPerCondition.toLocaleString('en-US')}{' '}
-          tasks per condition). RQ4 is the{' '}
-          <strong className="font-semibold text-ink">appendix feature ablation</strong> (
-          {rq4Data.labels.toLocaleString('en-US')} labels; {rq4Data.testLabels.toLocaleString('en-US')}{' '}
-          held-out test). RQ5 is cross-dataset transfer on{' '}
-          {rq5Data.nuImagesImages.toLocaleString('en-US')} nuImages images.
+          RQ1–RQ3 report results from the {studyStats.studyLabel} (
+          {studyStats.tasksPerCondition.toLocaleString('en-US')} tasks per condition). RQ4 is a
+          feature ablation on {rq4Data.labels.toLocaleString('en-US')} labels (
+          {rq4Data.testLabels.toLocaleString('en-US')} held-out test). RQ5 evaluates cross-dataset
+          transfer on {rq5Data.nuImagesImages.toLocaleString('en-US')} nuImages images.
         </SectionHeader>
 
         <div className="flex flex-wrap gap-2 mb-8 justify-center">
@@ -961,9 +962,11 @@ function RQ1Panel() {
   return (
     <div>
       <PanelHeading title={rq1Data.title} question={rq1Data.question} />
-      <p className="text-sm text-muted mb-6 leading-relaxed">{rq1Data.pilotNote}</p>
+      <p className="text-sm text-muted mb-6 leading-relaxed">
+        <RichText text={rq1Data.pilotNote} />
+      </p>
       <h4 className="text-xs uppercase tracking-wide text-muted mb-3">
-        Task scale, accuracy, and FDER (Table tab:rq1a)
+        Task scale, accuracy, and FDER
       </h4>
       <div className="overflow-x-auto mb-8">
         <table className="w-full text-sm border-collapse">
@@ -1046,13 +1049,11 @@ function RQ2Panel() {
     <div>
       <PanelHeading title={rq2Data.title} question={rq2Data.question} />
       <p className="text-sm text-muted mb-6 leading-relaxed">
-        {rq2Data.summary.aiLinkedLabels.toLocaleString('en-US')} source-linked final labels in the
-        pilot (Table tab:rq2a). Same error inherited means the final label has the same error type
-        as an erroneous AI suggestion.
+        {rq2Data.summary.aiLinkedLabels.toLocaleString('en-US')} source-linked final labels.
+        Same error inherited means the final label has the same error type as an erroneous AI
+        suggestion.
       </p>
-      <h4 className="text-xs uppercase tracking-wide text-muted mb-3">
-        By AI confidence bucket (Table tab:rq2a)
-      </h4>
+      <h4 className="text-xs uppercase tracking-wide text-muted mb-3">By AI confidence bucket</h4>
       <div className="overflow-x-auto mb-8">
         <table className="w-full text-sm border-collapse">
           <thead>
@@ -1116,7 +1117,9 @@ function RQ3Panel() {
   return (
     <div>
       <PanelHeading title={rq3Data.title} question={rq3Data.question} />
-      <p className="text-sm text-muted mb-5 leading-relaxed">{rq3Data.scorerNote}</p>
+      <p className="text-sm text-muted mb-5 leading-relaxed">
+        <RichText text={rq3Data.scorerNote} />
+      </p>
       <div className="flex flex-wrap gap-4 mb-6 p-4 rounded-xl bg-teal/5 border border-teal/15 text-sm">
         <span>
           <span className="text-muted">AUROC </span>
@@ -1207,7 +1210,9 @@ function RQ4Panel() {
   return (
     <div>
       <PanelHeading title={rq4Data.title} question={rq4Data.question} />
-      <p className="text-sm text-muted mb-6 leading-relaxed">{rq4Data.appendixNote}</p>
+      <p className="text-sm text-muted mb-6 leading-relaxed">
+        <RichText text={rq4Data.appendixNote} />
+      </p>
       <p className="text-sm text-muted mb-6 leading-relaxed">
         {rq4Data.modelLabel}. Features grouped into AI, Trace, Object, Scene, and Interface+Time (
         {rq4Data.featureCount} total), trained on {rq4Data.labels.toLocaleString('en-US')} final
