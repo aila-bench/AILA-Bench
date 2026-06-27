@@ -1,6 +1,6 @@
 # AILA-Bench Demo Site
 
-Static preview for the paper demo UI. Metrics use honest placeholders (`xxx`) until human-study data is available.
+Static site for the paper demo (Overview, interactive frame, case gallery, RQ1–RQ5 results).
 
 ## Local development
 
@@ -24,26 +24,25 @@ npm run preview:pages
 
 Output: `dist/`
 
-## Share UI without code (Netlify Drop)
+## GitHub Pages (automatic)
+
+Workflow: `.github/workflows/deploy-demo.yml` (builds `demo/` with `VITE_BASE_PATH=/<repo-name>/`).
+
+**One-time setup on the hosting repo:**
+
+1. Settings → **Pages** → **Source**: **GitHub Actions**
+2. Push to `main`
+
+**Double-blind submission:** use a topic-named org, not a personal account. See [docs/anonymous-demo-deploy.md](../docs/anonymous-demo-deploy.md).
+
+Example (anonymous):
+
+- Org: `aila-bench`, repo: `AILA-Bench`
+- Live URL: `https://aila-bench.github.io/AILA-Bench/`
+
+## Share UI without GitHub (Netlify Drop)
 
 1. `npm run build`
 2. Open https://app.netlify.com/drop
 3. Drag the `dist/` folder onto the page
-4. Share the generated `*.netlify.app` URL
-
-Rebuild and re-upload when the UI changes.
-
-## GitHub Pages (automatic)
-
-**One-time setup (required before the first deploy):**
-
-1. Open **Settings → Pages**:  
-   https://github.com/jennifershao11/AILA-Bench/settings/pages
-2. Under **Build and deployment**, set **Source** to **GitHub Actions**
-3. Save — this enables Pages for the repo
-
-Then push to `main` (or re-run the workflow from the Actions tab).
-
-Live URL: `https://jennifershao11.github.io/AILA-Bench/`
-
-If **build** passes but **deploy** fails, Pages is almost always not enabled yet — repeat step 2 above.
+4. Share the generated `*.netlify.app` URL (also avoids personal GitHub username if configured anonymously)
