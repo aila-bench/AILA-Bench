@@ -39,6 +39,35 @@ function showLive(placeholder: boolean) {
   return !placeholder;
 }
 
+/** Stagger label placement when nearby boxes would overlap (e.g. twin traffic lights). */
+function labelPositionsForBoxes(
+  boxes: { id: number; bbox: [number, number, number, number] }[]
+): Map<number, 'top' | 'bottom'> {
+  const positions = new Map<number, 'top' | 'bottom'>();
+  const sorted = [...boxes].sort((a, b) => a.bbox[0] - b.bbox[0]);
+  const labelWidthPx = 96;
+
+  for (let i = 0; i < sorted.length; i++) {
+    const box = sorted[i];
+    let pos: 'top' | 'bottom' = 'top';
+    const [x, y, , h] = box.bbox;
+
+    for (let j = 0; j < i; j++) {
+      const other = sorted[j];
+      if (positions.get(other.id) !== 'top') continue;
+      const [ox, oy, ow] = other.bbox;
+      const sameRow = Math.abs(y - oy) < Math.max(h, ow) * 0.6 + 16;
+      const labelOverlap = x < ox + labelWidthPx && ox < x + labelWidthPx;
+      if (sameRow && labelOverlap) {
+        pos = 'bottom';
+        break;
+      }
+    }
+    positions.set(box.id, pos);
+  }
+  return positions;
+}
+
 // Renders **bold** spans inside plain strings so we can highlight key phrases.
 function RichText({ text }: { text: string }) {
   const parts = text.split(/(\*\*[^*]+\*\*)/g);
@@ -307,6 +336,7 @@ function OverviewSection() {
 function DemoViewer() {
   const [condition, setCondition] = useState<Condition>('human_only');
   const { width: W, height: H, boxes } = demoScene;
+  const labelPositions = labelPositionsForBoxes(boxes);
   const conditions = [
     { id: 'human_only' as const, label: 'Human Only' },
     { id: 'ai_assisted' as const, label: 'AI-Assisted' },
@@ -316,10 +346,11 @@ function DemoViewer() {
   return (
     <section id="demo" className="py-24 scroll-mt-20">
       <div className="max-w-6xl mx-auto px-5">
-        <SectionHeader eyebrow="Interactive demo" title="One frame, three conditions">
-          The same BDD100K frame under each annotation condition. Boxes and confidences are
-          real <strong className="font-semibold text-ink">YOLOv8 nano</strong> predictions for
-          this image.
+        <SectionHeader eyebrow="Condition viewer" title="One frame, three conditions">
+          The same BDD100K frame under each annotation condition. Switch tabs to compare how
+          suggestions appear. Boxes and confidences are real{' '}
+          <strong className="font-semibold text-ink">YOLOv8 nano</strong> predictions for this
+          image.
         </SectionHeader>
 
         <div className="card p-6 md:p-8">
@@ -360,6 +391,7 @@ function DemoViewer() {
               boxes.map((box) => {
                 const [x, y, w, h] = box.bbox;
                 const color = classColor(box.category);
+                const labelPos = labelPositions.get(box.id) ?? 'top';
                 return (
                   <div
                     key={box.id}
@@ -373,7 +405,9 @@ function DemoViewer() {
                     }}
                   >
                     <div
-                      className="absolute -top-5 left-0 px-1.5 py-0.5 rounded text-[11px] font-medium text-white whitespace-nowrap"
+                      className={`absolute left-0 px-1.5 py-0.5 rounded text-[11px] font-medium text-white whitespace-nowrap ${
+                        labelPos === 'top' ? '-top-5' : '-bottom-5'
+                      }`}
                       style={{ backgroundColor: color }}
                     >
                       {box.category}
