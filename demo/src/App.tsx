@@ -290,25 +290,6 @@ function OverviewSection() {
             <p className="text-xs text-muted leading-relaxed">
               <RichText text={rq1Data.pilotNote} />
             </p>
-            <h4 className="text-xs uppercase tracking-wide text-muted mb-3">Conditions</h4>
-            <ul className="space-y-3">
-              {[
-                { c: COND.human_only, t: 'Human Only', d: 'No AI assistance.' },
-                { c: COND.ai_assisted, t: 'AI-Assisted', d: 'Suggestions without confidence.' },
-                { c: COND.ai_assisted_conf, t: 'AI + Confidence', d: 'Suggestions with confidence scores.' },
-              ].map((row) => (
-                <li key={row.t} className="flex items-start gap-3">
-                  <span
-                    className="w-2.5 h-2.5 rounded-full mt-1.5 shrink-0"
-                    style={{ backgroundColor: row.c }}
-                  />
-                  <div>
-                    <span className="text-ink font-medium text-sm">{row.t}</span>
-                    <p className="text-xs text-muted">{row.d}</p>
-                  </div>
-                </li>
-              ))}
-            </ul>
           </div>
           <div className="card p-7">
             <h3 className="font-serif text-xl text-ink mb-5">Recorded interaction traces</h3>
