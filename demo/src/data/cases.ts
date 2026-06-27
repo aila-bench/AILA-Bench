@@ -1,4 +1,4 @@
-// SCLN Case Gallery — real BDD100K frames with real ground-truth, YOLO11, and human final labels.
+// SCLN Case Gallery — real BDD100K frames with real ground-truth, YOLOv8 nano, and human final labels.
 //
 // GT / AI: cases_manifest.json. Human review: cases_human_review.json.
 

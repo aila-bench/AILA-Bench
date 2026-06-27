@@ -1,4 +1,4 @@
-// RQ1–RQ5: measured results from outputs/report/ and paper appendix.
+// RQ1–RQ3 & RQ5: main benchmark exports. RQ4: feature ablation (paper appendix).
 
 export interface ChartData {
   labels: string[];
@@ -11,33 +11,73 @@ export interface ChartData {
 }
 
 export const studyStats = {
-  totalLabels: 272_888,
-  totalErrors: 86_680,
-  overallErrorRate: 0.3176,
+  pilot: 'BDD100K pilot',
+  tasksPerCondition: 100_000,
+  labelsByCondition: {
+    human_only: 837_153,
+    ai_assisted: 903_455,
+    ai_assisted_confidence: 903_455,
+  },
   aurocScln: 0.648,
   auprcScln: 0.469,
-  auprcRandomBaseline: 0.3176,
+  auprcRandomBaseline: 0.317,
 };
 
 export const rq1Data = {
   title: 'RQ1: Error Modes',
   question: 'Do AI-assisted annotation errors differ from Human-only errors?',
+  pilotNote:
+    'BDD100K pilot (Table tab:rq1a). Review time is not reported — the current export contains no observed positive review_time_ms values.',
   answer:
-    'Overall FDER is similar across conditions (**32.9%** AI-assisted vs **31.5%** human-only), but the **error mix shifts**: AI-assisted labels carry more **bbox errors and false positives**, while human-only has slightly more **class errors** and **misses**.',
+    'Overall FDER is similar across conditions (**32.9%** AI-assisted vs **31.5%** human-only), but the **error mix shifts**: AI-assisted labels carry far more **bbox errors (13.9% vs 3.9%)** and fewer **misses (0.3% vs 11.6%)**; false-positive rates stay near **10–12%**.',
   overallFder: {
     labels: ['Human-only', 'AI-assisted', 'AI + Confidence'],
     values: [31.5, 32.9, 30.8],
   },
+  accuracy: [68.5, 67.1, 69.2],
   conditions: [
-    { key: 'human_only', labels: 93_715, errors: 29_548, fder: 31.5 },
-    { key: 'ai_assisted', labels: 90_345, errors: 29_748, fder: 32.9 },
-    { key: 'ai_assisted_confidence', labels: 88_828, errors: 27_384, fder: 30.8 },
+    {
+      key: 'human_only',
+      tasks: 100_000,
+      labels: 837_153,
+      accuracy: 68.5,
+      fder: 31.5,
+      bbox: 3.9,
+      class: 0.7,
+      fp: 12.2,
+      miss: 11.6,
+      other: 2.9,
+    },
+    {
+      key: 'ai_assisted',
+      tasks: 100_000,
+      labels: 903_455,
+      accuracy: 67.1,
+      fder: 32.9,
+      bbox: 13.9,
+      class: 3.8,
+      fp: 10.1,
+      miss: 0.3,
+      other: 4.8,
+    },
+    {
+      key: 'ai_assisted_confidence',
+      tasks: 100_000,
+      labels: 903_455,
+      accuracy: 69.2,
+      fder: 30.8,
+      bbox: 11.5,
+      class: 4.1,
+      fp: 10.0,
+      miss: 0.2,
+      other: 5.0,
+    },
   ],
   fderByCondition: {
-    labels: ['FDER-box', 'FDER-class', 'FDER-miss', 'FDER-fp', 'FDER-dup'],
-    humanOnly: [12.0, 4.0, 0.2, 10.3, 1.2],
-    aiAssisted: [13.9, 3.8, 0.3, 10.1, 1.2],
-    aiAssistedConf: [11.5, 4.1, 0.2, 10.0, 1.2],
+    labels: ['BBox', 'Class', 'FP', 'Miss', 'Other'],
+    humanOnly: [3.9, 0.7, 12.2, 11.6, 2.9],
+    aiAssisted: [13.9, 3.8, 10.1, 0.3, 4.8],
+    aiAssistedConf: [11.5, 4.1, 10.0, 0.2, 5.0],
   },
   placeholder: false,
 };
@@ -46,17 +86,37 @@ export const rq2Data = {
   title: 'RQ2: AI Error Inheritance',
   question: 'When AI gives a wrong suggestion, do humans inherit the same error — especially at high confidence?',
   answer:
-    'Among final labels linked to a wrong AI suggestion, **72.5%** keep the **same error type**. This rises from **66.4%** (AI conf 0.25–0.50) to **87.5%** (conf 0.75–1.00) — high-confidence wrong suggestions are **more likely to be inherited unchanged**.',
+    'Among source-linked final labels, same-error inheritance rises from **66.4%** (AI conf 0.25–0.50) to **87.5%** (conf 0.75–1.00). High-confidence buckets have fewer wrong AI suggestions (**6.0%** vs **43.3%**), but when AI is wrong, inheritance is highest.',
+  byConfidence: [
+    {
+      bucket: '0.25–0.50',
+      aiLinkedLabels: 97_097,
+      aiWrongRate: 43.3,
+      sameErrorInherited: 66.4,
+      finalErrorRate: 38.9,
+    },
+    {
+      bucket: '0.50–0.75',
+      aiLinkedLabels: 197_318,
+      aiWrongRate: 18.9,
+      sameErrorInherited: 72.6,
+      finalErrorRate: 21.8,
+    },
+    {
+      bucket: '0.75–1.00',
+      aiLinkedLabels: 273_548,
+      aiWrongRate: 6.0,
+      sameErrorInherited: 87.5,
+      finalErrorRate: 7.8,
+    },
+  ],
   inheritanceByConfidence: {
     labels: ['0.25–0.50', '0.50–0.75', '0.75–1.00'],
     sameErrorInherited: [66.4, 72.6, 87.5],
     aiWrongRate: [43.3, 18.9, 6.0],
   },
   summary: {
-    sourceLinkedFinalLabels: 51_633,
-    fromWrongAi: 8_691,
-    sameErrorInherited: 6_298,
-    overallInheritanceRate: 72.5,
+    aiLinkedLabels: 567_963,
   },
   placeholder: false,
 };
@@ -74,8 +134,10 @@ export interface ReviewPolicyRow {
 export const rq3Data = {
   title: 'RQ3: SCLNScore vs Review Strategies',
   question: 'Under a limited review budget, does SCLNScore beat traditional re-review strategies?',
+  scorerNote:
+    'SCLNScore is the trained ranking model used for review prioritization on the full benchmark export. These metrics are **not** the appendix logistic-regression ablation in RQ4.',
   answer:
-    'SCLNScore reaches **AUPRC 0.469** (AUROC **0.648**). At **P@5%** it scores **0.595** vs **0.317** random — while **high-confidence review collapses** (P@1% **0.021**). High-loss / Confident Learning rank by oracle error labels and are **not deployable**; SCLNScore is the best practical policy among blind methods.',
+    'SCLNScore reaches **AUPRC 0.469** (AUROC **0.648**). At **P@5%** it scores **59.5%** vs **31.7%** random — while **high-confidence review collapses** (P@1% **2.1%**). SCLNScore is the best deployable policy in the pilot comparison.',
   sclnMetrics: {
     auroc: studyStats.aurocScln,
     auprc: studyStats.auprcScln,
@@ -110,7 +172,7 @@ export const rq3Data = {
       recallAt20: 0.073,
     },
     {
-      name: 'Ensemble disagreement',
+      name: 'Ensemble',
       auprc: null,
       precisionAt1: 0.679,
       precisionAt5: 0.573,
@@ -126,24 +188,6 @@ export const rq3Data = {
       recallAt5: 0.094,
       recallAt10: 0.175,
       recallAt20: 0.32,
-    },
-    {
-      name: 'High-loss',
-      auprc: null,
-      precisionAt1: 1.0,
-      precisionAt5: 1.0,
-      recallAt5: 0.157,
-      recallAt10: 0.315,
-      recallAt20: 0.63,
-    },
-    {
-      name: 'Confident learning',
-      auprc: null,
-      precisionAt1: 1.0,
-      precisionAt5: 1.0,
-      recallAt5: 0.157,
-      recallAt10: 0.315,
-      recallAt20: 0.63,
     },
   ] satisfies ReviewPolicyRow[],
   placeholder: false,
@@ -177,6 +221,9 @@ export interface RQ4TraceMean {
 export const rq4Data = {
   title: 'RQ4: Feature Importance (Ablation)',
   question: 'Which factors matter most for ranking final-label error risk?',
+  appendixNote:
+    'Appendix ablation only: class-balanced logistic regression on 17 grouped features, with an image-level train/test split. This is a **separate model** from the SCLNScore ranker in RQ3 — higher AUPRC here reflects a different evaluator and held-out split, not a better deployable ranker.',
+  modelLabel: 'Class-balanced logistic regression (full 17 features)',
   answer:
     'The full model reaches **AUPRC 0.678** (AUROC **0.781**), well above the **0.320** random baseline. **Object** is the strongest group (group-only AUPRC **0.566**; removing it drops AUPRC by **0.112**). **AI** features rank second (AUPRC **0.522**, drop **0.083**). **Trace** and **Interface+Time** add weaker but useful signals; **category** is the top single feature (AUPRC **0.507**, lift **1.586**).',
   labels: 272_888,
@@ -282,11 +329,10 @@ export const benchmarkStats = {
   numClasses: 8,
   traceFields: [
     'action_type',
-    'review_time',
     'bbox_edit_distance',
     'ai_final_iou',
     'ai_confidence',
-    'class_changed',
+    'class_change',
     'ai_error_type',
     'final_correctness',
   ],

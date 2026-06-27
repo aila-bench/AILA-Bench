@@ -19,9 +19,9 @@ export const findings: Finding[] = [
   {
     id: 'inheritance',
     title: 'Error Inheritance',
-    value: '66% → 88%',
+    value: '66.4% → 87.5%',
     description:
-      'When AI was wrong, humans kept the **same error type** in **72.5%** of cases — rising from **66%** (low AI conf) to **88%** (high conf).',
+      'When AI was wrong, humans kept the **same error type** — rising from **66.4%** (low AI conf) to **87.5%** (high conf); see RQ2 table.',
     placeholder: false,
   },
   {

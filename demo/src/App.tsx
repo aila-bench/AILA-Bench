@@ -31,7 +31,7 @@ const COND = {
 const POS = '#0f6c78';
 const NEG = '#b23a48';
 
-// All RQ panels use measured results from the benchmark study and paper appendix.
+// RQ1–RQ3 & RQ5: benchmark exports. RQ4: appendix feature ablation (logistic regression).
 const PH = 'xxx';
 const SKELETON = '#c9c4ba';
 
@@ -237,21 +237,28 @@ function OverviewSection() {
 
         <div className="grid md:grid-cols-2 gap-5">
           <div className="card p-7">
-            <h3 className="font-serif text-xl text-ink mb-5">Study scale (measured)</h3>
+            <h3 className="font-serif text-xl text-ink mb-5">Pilot scale (Table tab:rq1a)</h3>
             <ul className="space-y-3 text-sm mb-6">
               <li className="flex justify-between gap-4 border-b border-line pb-3">
-                <span className="text-muted">Final labels</span>
-                <span className="text-ink font-mono">{studyStats.totalLabels.toLocaleString('en-US')}</span>
+                <span className="text-muted">Tasks per condition</span>
+                <span className="text-ink font-mono">
+                  {studyStats.tasksPerCondition.toLocaleString('en-US')}
+                </span>
               </li>
               <li className="flex justify-between gap-4 border-b border-line pb-3">
-                <span className="text-muted">Error labels</span>
-                <span className="text-ink font-mono">{studyStats.totalErrors.toLocaleString('en-US')}</span>
+                <span className="text-muted">Human-only labels</span>
+                <span className="text-ink font-mono">
+                  {studyStats.labelsByCondition.human_only.toLocaleString('en-US')}
+                </span>
               </li>
               <li className="flex justify-between gap-4 border-b border-line pb-3">
-                <span className="text-muted">Overall error rate</span>
-                <span className="text-ink font-mono">{(studyStats.overallErrorRate * 100).toFixed(1)}%</span>
+                <span className="text-muted">AI-assisted labels</span>
+                <span className="text-ink font-mono">
+                  {studyStats.labelsByCondition.ai_assisted.toLocaleString('en-US')}
+                </span>
               </li>
             </ul>
+            <p className="text-xs text-muted leading-relaxed">{rq1Data.pilotNote}</p>
             <h4 className="text-xs uppercase tracking-wide text-muted mb-3">Conditions</h4>
             <ul className="space-y-3">
               {[
@@ -795,9 +802,12 @@ function ResultsExplorer() {
     <section id="results" className="py-24 scroll-mt-20">
       <div className="max-w-6xl mx-auto px-5">
         <SectionHeader eyebrow="Results" title="Five research questions">
-          RQ1–RQ5 report measured results on {studyStats.totalLabels.toLocaleString('en-US')} final
-          BDD labels (RQ4 ablation on {rq4Data.testLabels.toLocaleString('en-US')} held-out test
-          labels; RQ5 transfer on {rq5Data.nuImagesImages.toLocaleString('en-US')} nuImages).
+          RQ1–RQ3 report the {studyStats.pilot} ({studyStats.tasksPerCondition.toLocaleString('en-US')}{' '}
+          tasks per condition). RQ4 is the{' '}
+          <strong className="font-semibold text-ink">appendix feature ablation</strong> (
+          {rq4Data.labels.toLocaleString('en-US')} labels; {rq4Data.testLabels.toLocaleString('en-US')}{' '}
+          held-out test). RQ5 is cross-dataset transfer on{' '}
+          {rq5Data.nuImagesImages.toLocaleString('en-US')} nuImages images.
         </SectionHeader>
 
         <div className="flex flex-wrap gap-2 mb-8 justify-center">
@@ -940,26 +950,68 @@ function MeterRow({
 
 function RQ1Panel() {
   const live = showLive(rq1Data.placeholder);
+  const conditionNames = ['Human-only', 'AI-assisted', 'AI + Confidence'];
   return (
     <div>
       <PanelHeading title={rq1Data.title} question={rq1Data.question} />
-      <h4 className="text-xs uppercase tracking-wide text-muted mb-4">
-        Overall final detection error rate (%)
+      <p className="text-sm text-muted mb-6 leading-relaxed">{rq1Data.pilotNote}</p>
+      <h4 className="text-xs uppercase tracking-wide text-muted mb-3">
+        Task scale, accuracy, and FDER (Table tab:rq1a)
       </h4>
-      <div className="grid sm:grid-cols-3 gap-4 mb-10">
-        {rq1Data.overallFder.labels.map((label, i) => (
-          <MeterRow
-            key={label}
-            label={label}
-            display={`${rq1Data.overallFder.values[i]}%`}
-            pct={(rq1Data.overallFder.values[i] / 40) * 100}
-            color={[COND.human_only, COND.ai_assisted, COND.ai_assisted_conf][i]}
-            live={live}
-          />
-        ))}
+      <div className="overflow-x-auto mb-8">
+        <table className="w-full text-sm border-collapse">
+          <thead>
+            <tr className="border-b border-line text-left text-muted text-xs uppercase tracking-wide">
+              <th className="py-2 pr-3 font-medium">Condition</th>
+              <th className="py-2 pr-3 font-medium text-right">Tasks</th>
+              <th className="py-2 pr-3 font-medium text-right">Labels</th>
+              <th className="py-2 pr-3 font-medium text-right">Acc.</th>
+              <th className="py-2 pr-3 font-medium text-right">FDER</th>
+              <th className="py-2 pr-3 font-medium text-right">BBox</th>
+              <th className="py-2 pr-3 font-medium text-right">Class</th>
+              <th className="py-2 pr-3 font-medium text-right">FP</th>
+              <th className="py-2 pr-3 font-medium text-right">Miss</th>
+              <th className="py-2 font-medium text-right">Other</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rq1Data.conditions.map((row, i) => (
+              <tr key={row.key} className="border-b border-line/60">
+                <td className="py-2.5 pr-3 text-ink font-medium">{conditionNames[i]}</td>
+                <td className="py-2.5 pr-3 font-mono text-right">
+                  {live ? row.tasks.toLocaleString('en-US') : PH}
+                </td>
+                <td className="py-2.5 pr-3 font-mono text-right">
+                  {live ? row.labels.toLocaleString('en-US') : PH}
+                </td>
+                <td className="py-2.5 pr-3 font-mono text-right">
+                  {live ? `${row.accuracy.toFixed(1)}%` : PH}
+                </td>
+                <td className="py-2.5 pr-3 font-mono text-right">
+                  {live ? `${row.fder.toFixed(1)}%` : PH}
+                </td>
+                <td className="py-2.5 pr-3 font-mono text-right">
+                  {live ? `${row.bbox.toFixed(1)}%` : PH}
+                </td>
+                <td className="py-2.5 pr-3 font-mono text-right">
+                  {live ? `${row.class.toFixed(1)}%` : PH}
+                </td>
+                <td className="py-2.5 pr-3 font-mono text-right">
+                  {live ? `${row.fp.toFixed(1)}%` : PH}
+                </td>
+                <td className="py-2.5 pr-3 font-mono text-right">
+                  {live ? `${row.miss.toFixed(1)}%` : PH}
+                </td>
+                <td className="py-2.5 font-mono text-right">
+                  {live ? `${row.other.toFixed(1)}%` : PH}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
       <h4 className="text-xs uppercase tracking-wide text-muted mb-4">
-        Error type rate by condition (% of labels)
+        Error composition by condition (% of labels)
       </h4>
       <BarChart
         live={live}
@@ -986,15 +1038,48 @@ function RQ2Panel() {
   return (
     <div>
       <PanelHeading title={rq2Data.title} question={rq2Data.question} />
-      <p className="text-sm text-muted mb-6">
-        Among {rq2Data.summary.sourceLinkedFinalLabels.toLocaleString('en-US')} AI-linked final
-        labels, {rq2Data.summary.fromWrongAi.toLocaleString('en-US')} came from a wrong AI
-        suggestion;{' '}
-        <strong className="text-ink">{rq2Data.summary.overallInheritanceRate}%</strong> inherited
-        the same error type.
+      <p className="text-sm text-muted mb-6 leading-relaxed">
+        {rq2Data.summary.aiLinkedLabels.toLocaleString('en-US')} source-linked final labels in the
+        pilot (Table tab:rq2a). Same error inherited means the final label has the same error type
+        as an erroneous AI suggestion.
       </p>
+      <h4 className="text-xs uppercase tracking-wide text-muted mb-3">
+        By AI confidence bucket (Table tab:rq2a)
+      </h4>
+      <div className="overflow-x-auto mb-8">
+        <table className="w-full text-sm border-collapse">
+          <thead>
+            <tr className="border-b border-line text-left text-muted text-xs uppercase tracking-wide">
+              <th className="py-2 pr-4 font-medium">AI conf.</th>
+              <th className="py-2 pr-4 font-medium text-right">AI-linked labels</th>
+              <th className="py-2 pr-4 font-medium text-right">AI wrong</th>
+              <th className="py-2 pr-4 font-medium text-right">Same error inherited</th>
+              <th className="py-2 font-medium text-right">Final error</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rq2Data.byConfidence.map((row) => (
+              <tr key={row.bucket} className="border-b border-line/60">
+                <td className="py-2.5 pr-4 font-mono text-ink">{row.bucket}</td>
+                <td className="py-2.5 pr-4 font-mono text-right">
+                  {live ? row.aiLinkedLabels.toLocaleString('en-US') : PH}
+                </td>
+                <td className="py-2.5 pr-4 font-mono text-right">
+                  {live ? `${row.aiWrongRate.toFixed(1)}%` : PH}
+                </td>
+                <td className="py-2.5 pr-4 font-mono text-right">
+                  {live ? `${row.sameErrorInherited.toFixed(1)}%` : PH}
+                </td>
+                <td className="py-2.5 font-mono text-right">
+                  {live ? `${row.finalErrorRate.toFixed(1)}%` : PH}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
       <h4 className="text-xs uppercase tracking-wide text-muted mb-4">
-        Same-error inheritance rate by AI confidence
+        Same-error inheritance vs. AI-wrong rate
       </h4>
       <BarChart
         live={live}
@@ -1024,6 +1109,7 @@ function RQ3Panel() {
   return (
     <div>
       <PanelHeading title={rq3Data.title} question={rq3Data.question} />
+      <p className="text-sm text-muted mb-5 leading-relaxed">{rq3Data.scorerNote}</p>
       <div className="flex flex-wrap gap-4 mb-6 p-4 rounded-xl bg-teal/5 border border-teal/15 text-sm">
         <span>
           <span className="text-muted">AUROC </span>
@@ -1056,7 +1142,6 @@ function RQ3Panel() {
           <tbody>
             {rq3Data.policies.map((policy) => {
               const highlight = policy.name === 'SCLNScore';
-              const oracle = policy.name === 'High-loss' || policy.name === 'Confident learning';
               return (
                 <tr
                   key={policy.name}
@@ -1067,9 +1152,6 @@ function RQ3Panel() {
                     <span className={highlight ? 'text-teal font-semibold' : 'text-ink/80'}>
                       {policy.name}
                     </span>
-                    {oracle && (
-                      <span className="block text-[11px] text-muted mt-0.5">oracle (not deployable)</span>
-                    )}
                   </td>
                   <td className="text-right py-3 px-3 text-ink font-mono">
                     {live
@@ -1118,12 +1200,13 @@ function RQ4Panel() {
   return (
     <div>
       <PanelHeading title={rq4Data.title} question={rq4Data.question} />
+      <p className="text-sm text-muted mb-6 leading-relaxed">{rq4Data.appendixNote}</p>
       <p className="text-sm text-muted mb-6 leading-relaxed">
-        Class-balanced logistic regression on {rq4Data.featureCount} features in five groups (AI,
-        Trace, Object, Scene, Interface+Time), trained on {rq4Data.labels.toLocaleString('en-US')}{' '}
-        final labels with image-level train/test split. Test set:{' '}
-        {rq4Data.testLabels.toLocaleString('en-US')} labels, error rate{' '}
-        {rq4Data.testErrorRate}% (random AUPRC baseline).
+        {rq4Data.modelLabel}. Features grouped into AI, Trace, Object, Scene, and Interface+Time (
+        {rq4Data.featureCount} total), trained on {rq4Data.labels.toLocaleString('en-US')} final
+        labels with image-level train/test split. Test set:{' '}
+        {rq4Data.testLabels.toLocaleString('en-US')} labels, error rate {rq4Data.testErrorRate}%
+        (random AUPRC baseline {rq4Data.randomAuprcBaseline.toFixed(3)}).
       </p>
 
       <div className="grid sm:grid-cols-3 gap-4 mb-8">
